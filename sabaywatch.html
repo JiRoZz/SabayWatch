@@ -1,0 +1,3203 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SabayWatch - មើលភាពយន្តខ្មែរ</title>
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+<style>
+:root {
+  --bg: #050814;
+  --bg2: #0a0f1e;
+  --bg3: #0f1628;
+  --card: #111827;
+  --card2: #1a2235;
+  --border: rgba(255,200,50,0.15);
+  --gold: #f5c518;
+  --gold2: #e6a800;
+  --red: #e63946;
+  --green: #2ecc71;
+  --blue: #3b82f6;
+  --text: #f0f4ff;
+  --text2: #8892a4;
+  --text3: #556070;
+  --font-kh: 'Kantumruy Pro', sans-serif;
+  --font-en: 'Rajdhani', sans-serif;
+  --font-display: 'Bebas Neue', sans-serif;
+  --radius: 12px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --glow: 0 0 20px rgba(245,197,24,0.2);
+  --nav-h: 64px;
+  --bottom-h: 64px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-kh);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--gold2); border-radius:3px; }
+
+/* ── HEADER ── */
+#header {
+  position: fixed; top:0; left:0; right:0; z-index:1000;
+  height: var(--nav-h);
+  background: rgba(5,8,20,0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
+
+/* Mobile Hamburger Menu */
+.mobile-menu-btn {
+  display: none;
+  background: none; border: none; color: var(--text);
+  font-size: 20px; cursor: pointer; padding: 8px;
+  border-radius: 8px; transition: all .2s;
+  z-index: 1001;
+}
+.mobile-menu-btn:hover { background: rgba(245,197,24,0.1); color: var(--gold); }
+
+.mobile-menu-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 999;
+  background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+}
+.mobile-menu-backdrop.open { display: block; }
+
+.mobile-menu {
+  display: none; position: fixed; top: var(--nav-h); left: 0; right: 0;
+  z-index: 1000; background: var(--card); border-bottom: 1px solid var(--border);
+  flex-direction: column; padding: 12px; gap: 8px;
+  max-height: calc(100vh - var(--nav-h));
+  overflow-y: auto;
+  animation: slideDown .3s ease;
+}
+.mobile-menu.open { display: flex; }
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.mobile-menu-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-radius: 10px; cursor: pointer;
+  color: var(--text2); transition: all .2s; border: none; background: none;
+  font-family: var(--font-kh); font-size: 14px; width: 100%; text-align: left;
+}
+.mobile-menu-item:hover, .mobile-menu-item.active {
+  background: rgba(245,197,24,0.1); color: var(--gold);
+}
+.mobile-menu-item i { font-size: 18px; min-width: 24px; }
+
+.mobile-menu-divider {
+  height: 1px; background: var(--border); margin: 4px 0;
+}
+
+@media(max-width:768px) {
+  #header { gap: 8px; padding: 0 12px; }
+  .mobile-menu-btn { display: block; }
+  .desktop-nav { display: none !important; }
+  .search-bar { max-width: 100% !important; }
+  .logo-text { font-size: 16px; letter-spacing: 0; }
+  .logo-icon { width: 32px; height: 32px; font-size: 14px; }
+  .header-spacer { display: none; }
+  .btn-topup { display: none !important; }
+  
+  /* Show wallet chip, bell on mobile - icon only */
+  .wallet-chip { padding: 6px 10px; }
+  .wallet-chip .coin-label { display: none; }
+  .wallet-chip .coin-count { font-size: 12px; }
+  .wallet-chip .coin-icon { font-size: 14px; }
+  
+  .notif-btn { font-size: 16px; padding: 4px; }
+}
+
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none; flex-shrink: 0;
+}
+.logo-icon {
+  width:38px; height:38px;
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  border-radius: 10px;
+  display: flex; align-items:center; justify-content:center;
+  font-size:18px;
+  box-shadow: var(--glow);
+}
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, var(--gold), #fff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-spacer { flex:1; }
+
+/* Desktop Nav Links */
+.desktop-nav { display:flex; gap:8px; align-items:center; }
+.desktop-nav a {
+  color: var(--text2); text-decoration:none;
+  font-size:14px; font-weight:500;
+  padding: 6px 14px; border-radius:8px;
+  transition: all .2s;
+  font-family: var(--font-kh);
+}
+.desktop-nav a:hover, .desktop-nav a.active {
+  color: var(--gold); background: rgba(245,197,24,0.08);
+}
+
+/* Wallet Chip */
+.wallet-chip {
+  display:flex; align-items:center; gap:7px;
+  background: var(--card2); border:1px solid var(--border);
+  border-radius:20px; padding:6px 14px;
+  cursor:pointer; transition: all .2s; user-select:none;
+}
+.wallet-chip:hover { border-color: var(--gold); box-shadow: var(--glow); }
+.wallet-chip .coin-icon { color: var(--gold); font-size:15px; }
+.wallet-chip .coin-count { font-weight:700; font-size:14px; color: var(--gold); }
+.wallet-chip .coin-label { font-size:11px; color: var(--text2); }
+
+/* TopUp Btn */
+.btn-topup {
+  background: linear-gradient(135deg, var(--gold), var(--gold2));
+  color: #000; font-weight:700; font-size:13px;
+  border:none; border-radius:20px;
+  padding:7px 16px; cursor:pointer;
+  transition: all .2s; font-family: var(--font-kh);
+  display:flex; align-items:center; gap:6px;
+}
+.btn-topup:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(245,197,24,0.4); }
+
+/* Auth Btns */
+.btn-login {
+  background:transparent; border:1px solid var(--border);
+  color:var(--text); border-radius:20px; padding:7px 16px;
+  font-size:13px; cursor:pointer; font-family:var(--font-kh);
+  transition:all .2s;
+}
+.btn-login:hover { border-color:var(--gold); color:var(--gold); }
+
+/* Avatar */
+.user-avatar {
+  width:36px; height:36px; border-radius:50%;
+  background: linear-gradient(135deg, var(--gold), #ff6b35);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px; color:#000;
+  cursor:pointer; border:2px solid var(--border);
+  transition:all .2s; position:relative;
+  text-transform:uppercase;
+}
+.user-avatar:hover { border-color:var(--gold); box-shadow:var(--glow); }
+
+/* Notification Bell */
+.notif-btn {
+  position:relative; background:none; border:none;
+  color:var(--text2); font-size:18px; cursor:pointer;
+  padding:6px; border-radius:8px; transition:all .2s;
+}
+.notif-btn:hover { color:var(--gold); background:rgba(245,197,24,0.08); }
+.notif-badge {
+  position:absolute; top:2px; right:2px;
+  width:8px; height:8px; background:var(--red);
+  border-radius:50%; border:1px solid var(--bg);
+}
+
+/* ── MAIN CONTENT ── */
+#app {
+  padding-top: var(--nav-h);
+  min-height: 100vh;
+}
+
+/* Pages */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── HOME PAGE ── */
+#home-page {
+  padding-bottom: 80px;
+}
+
+/* Hero Banner */
+.hero-banner {
+  position:relative; overflow:hidden;
+  height:480px;
+  background: linear-gradient(135deg, #050814, #0a1040);
+}
+.hero-bg-grid {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px);
+  background-size:50px 50px;
+}
+.hero-content {
+  position:relative; z-index:2;
+  max-width:600px; padding:80px 40px 40px;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(245,197,24,0.1); border:1px solid rgba(245,197,24,0.3);
+  border-radius:20px; padding:4px 12px;
+  font-size:12px; color:var(--gold); margin-bottom:20px;
+}
+.hero-title {
+  font-family:var(--font-display);
+  font-size:56px; line-height:1;
+  letter-spacing:3px;
+  background:linear-gradient(135deg, #fff, var(--gold));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:16px;
+}
+.hero-sub {
+  font-size:16px; color:var(--text2); line-height:1.7;
+  margin-bottom:28px;
+}
+.hero-btn {
+  display:inline-flex; align-items:center; gap:8px;
+  background:linear-gradient(135deg, var(--gold), var(--gold2));
+  color:#000; font-weight:700; font-size:15px;
+  border:none; border-radius:12px; padding:13px 28px;
+  cursor:pointer; font-family:var(--font-kh);
+  transition:all .2s;
+}
+.hero-btn:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(245,197,24,0.4); }
+
+/* Section */
+.section {
+  padding: 32px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.section-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:20px;
+}
+.section-title {
+  font-size:20px; font-weight:700;
+  display:flex; align-items:center; gap:10px;
+}
+.section-title::before {
+  content:''; display:block;
+  width:4px; height:22px;
+  background:linear-gradient(180deg, var(--gold), var(--gold2));
+  border-radius:2px;
+}
+.section-more {
+  color:var(--gold); font-size:13px; text-decoration:none;
+  border:1px solid rgba(245,197,24,0.2); border-radius:20px;
+  padding:4px 12px; transition:all .2s;
+}
+.section-more:hover { background:rgba(245,197,24,0.08); }
+
+/* Movie Grid */
+.movie-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap:16px;
+}
+@media(max-width:768px) {
+  .movie-grid { grid-template-columns: repeat(2, 1fr); gap:12px; }
+}
+
+/* Movie Card */
+.movie-card {
+  background:var(--card); border-radius:var(--radius);
+  overflow:hidden; cursor:pointer;
+  border:1px solid var(--border);
+  transition:all .25s;
+  position:relative;
+}
+.movie-card:hover {
+  transform:translateY(-4px);
+  border-color:rgba(245,197,24,0.4);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6), var(--glow);
+}
+.movie-thumb {
+  width:100%; aspect-ratio:2/3; object-fit:cover;
+  display:block; background: var(--card2);
+  position:relative; overflow:hidden;
+}
+.movie-thumb-img {
+  width:100%; height:100%; object-fit:cover;
+  display:block;
+}
+.movie-thumb-placeholder {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:40px; color:var(--text3);
+  background: linear-gradient(135deg, var(--card2), var(--bg3));
+}
+.movie-free-badge {
+  position:absolute; top:8px; left:8px;
+  background:var(--green); color:#fff;
+  font-size:10px; font-weight:700;
+  padding:3px 8px; border-radius:4px;
+  font-family:var(--font-en);
+}
+.movie-ep-badge {
+  position:absolute; bottom:8px; right:8px;
+  background:rgba(0,0,0,0.8); color:var(--text);
+  font-size:10px; padding:3px 7px; border-radius:4px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.movie-info { padding:10px; }
+.movie-name {
+  font-size:13px; font-weight:600; line-height:1.4;
+  margin-bottom:6px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.movie-meta {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:6px;
+}
+.movie-stars {
+  display:flex; gap:2px; font-size:11px; color:var(--gold);
+}
+.movie-price {
+  font-size:12px; font-weight:700; color:var(--gold);
+  font-family:var(--font-en);
+}
+.movie-note {
+  font-size:10px; color:var(--text2);
+  margin-top:4px; line-height:1.3;
+}
+
+/* ── MOVIE DETAIL PAGE ── */
+#movie-detail-page {
+  padding-bottom:100px;
+}
+.movie-detail-hero {
+  position:relative; overflow:hidden;
+  background: var(--bg2);
+  min-height:300px;
+  display:flex; align-items:flex-end;
+}
+.movie-detail-bg {
+  position:absolute; inset:0;
+  filter:blur(30px) brightness(0.3);
+  width:100%; height:100%; object-fit:cover;
+}
+.movie-detail-overlay {
+  position:absolute; inset:0;
+  background:linear-gradient(to top, var(--bg) 0%, transparent 60%);
+}
+.movie-detail-content {
+  position:relative; z-index:2;
+  display:flex; gap:24px; padding:24px;
+  width:100%; align-items:flex-end;
+}
+.movie-detail-poster {
+  width:140px; flex-shrink:0;
+  aspect-ratio:2/3; border-radius:12px;
+  overflow:hidden; box-shadow: var(--shadow);
+  border:2px solid rgba(245,197,24,0.2);
+  background:var(--card);
+}
+.movie-detail-poster img { width:100%; height:100%; object-fit:cover; }
+.movie-detail-info { flex:1; min-width:0; }
+.movie-detail-title {
+  font-size:24px; font-weight:700; margin-bottom:10px; line-height:1.3;
+}
+.movie-detail-stars {
+  display:flex; align-items:center; gap:4px; margin-bottom:8px;
+}
+.movie-detail-stars .stars { color:var(--gold); font-size:14px; }
+.movie-detail-stars .count { color:var(--text2); font-size:13px; }
+.movie-note-text {
+  color:var(--text2); font-size:13px; margin-bottom:16px; line-height:1.6;
+}
+.movie-price-row {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.movie-price-big {
+  font-size:22px; font-weight:700; color:var(--gold);
+  font-family:var(--font-en);
+}
+.btn-buy {
+  background:linear-gradient(135deg, var(--gold), var(--gold2));
+  color:#000; font-weight:700; font-size:14px;
+  border:none; border-radius:10px; padding:10px 20px;
+  cursor:pointer; font-family:var(--font-kh);
+  transition:all .2s;
+}
+.btn-buy:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(245,197,24,0.4); }
+.btn-back {
+  background:none; border:1px solid var(--border);
+  color:var(--text); border-radius:10px; padding:10px 18px;
+  font-size:14px; cursor:pointer; font-family:var(--font-kh);
+  display:flex; align-items:center; gap:6px;
+  transition:all .2s;
+}
+.btn-back:hover { border-color:var(--gold); color:var(--gold); }
+
+/* Episodes */
+.episodes-section { padding:20px; }
+.episodes-header {
+  font-size:16px; font-weight:700; margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.episodes-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(80px,1fr)); gap:10px;
+}
+.ep-btn {
+  aspect-ratio:1; background:var(--card2);
+  border:1px solid var(--border); border-radius:10px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:all .2s; position:relative;
+  font-family:var(--font-kh);
+}
+.ep-btn:hover { border-color:var(--gold); }
+.ep-btn.free { border-color:rgba(46,204,113,0.3); }
+.ep-btn.locked { opacity:0.5; cursor:not-allowed; }
+.ep-btn .ep-num { font-size:18px; font-weight:700; }
+.ep-btn .ep-label { font-size:10px; color:var(--text2); margin-top:2px; }
+.ep-btn .ep-free-tag {
+  position:absolute; top:4px; right:4px;
+  background:var(--green); color:#fff;
+  font-size:8px; padding:1px 5px; border-radius:3px;
+  font-weight:700;
+}
+.ep-btn.active { background:linear-gradient(135deg, rgba(245,197,24,0.15), rgba(245,197,24,0.05)); border-color:var(--gold); }
+
+/* Video Player */
+.video-wrap {
+  background:#000; aspect-ratio:16/9;
+  position:relative; overflow:hidden;
+  border-radius:0;
+}
+.video-wrap video { width:100%; height:100%; }
+.video-placeholder {
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:12px;
+  background:var(--bg2);
+}
+.play-icon-big {
+  width:64px; height:64px; border-radius:50%;
+  background:rgba(245,197,24,0.15); border:2px solid var(--gold);
+  display:flex; align-items:center; justify-content:center;
+  font-size:24px; color:var(--gold); cursor:pointer;
+  transition:all .2s;
+}
+.play-icon-big:hover { background:rgba(245,197,24,0.25); transform:scale(1.05); }
+
+/* ── BOTTOM NAV (Mobile) ── */
+#bottom-nav {
+  display:none;
+  position:fixed; bottom:0; left:0; right:0; z-index:1000;
+  height:var(--bottom-h);
+  background:rgba(5,8,20,0.95);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  flex-direction:row; align-items:stretch;
+}
+.bottom-nav-item {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:4px;
+  cursor:pointer; transition:all .2s;
+  color:var(--text3); font-size:10px;
+  border:none; background:none;
+  font-family:var(--font-kh);
+}
+.bottom-nav-item i { font-size:18px; }
+.bottom-nav-item.active, .bottom-nav-item:hover { color:var(--gold); }
+
+@media(max-width:768px) {
+  #bottom-nav { display:flex; }
+  #app { padding-bottom:var(--bottom-h); }
+  .desktop-nav { display:none; }
+  .hero-banner { height:320px; }
+  .hero-content { padding:60px 20px 30px; }
+  .hero-title { font-size:38px; }
+}
+
+/* ── DROPDOWN MENUS ── */
+.dropdown {
+  position:absolute; top:calc(100% + 8px); right:0;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); min-width:220px;
+  box-shadow: var(--shadow);
+  z-index:2000; overflow:hidden;
+  animation: dropIn .15s ease;
+}
+@keyframes dropIn {
+  from { opacity:0; transform:translateY(-8px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.dropdown-header {
+  padding:14px 16px;
+  background:var(--card2); border-bottom:1px solid var(--border);
+}
+.dropdown-username { font-weight:700; font-size:15px; }
+.dropdown-email { font-size:11px; color:var(--text2); margin-top:2px; }
+.dropdown-item {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 16px; cursor:pointer;
+  font-size:13px; transition:all .15s;
+  border:none; background:none; color:var(--text);
+  width:100%; text-align:left; font-family:var(--font-kh);
+}
+.dropdown-item:hover { background:rgba(245,197,24,0.06); color:var(--gold); }
+.dropdown-item i { width:18px; text-align:center; color:var(--text2); }
+.dropdown-divider { height:1px; background:var(--border); }
+
+/* Notif Dropdown */
+.notif-dropdown {
+  position: fixed; top: calc(var(--nav-h) + 8px); right: 16px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:var(--radius); width:320px;
+  box-shadow:var(--shadow); z-index:2000;
+  animation:dropIn .15s ease; overflow:hidden;
+}
+.notif-head {
+  padding:12px 16px; background:var(--card2);
+  border-bottom:1px solid var(--border);
+  font-weight:700; font-size:14px;
+  position:sticky; top:0; z-index:1;
+}
+.notif-list { max-height:calc(100vh - var(--nav-h) - 80px); overflow-y:auto; }
+.notif-item {
+  padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.04);
+  cursor:pointer; transition:all .15s;
+}
+.notif-item:hover { background:rgba(245,197,24,0.04); }
+.notif-item.unread { border-left:3px solid var(--gold); }
+.notif-title { font-size:13px; font-weight:600; margin-bottom:3px; }
+.notif-body { font-size:12px; color:var(--text2); line-height:1.4; }
+.notif-time { font-size:10px; color:var(--text3); margin-top:4px; }
+
+/* ── MODALS ── */
+.modal-overlay {
+  position:fixed; inset:0; z-index:3000;
+  background:rgba(0,0,0,0.75); backdrop-filter:blur(6px);
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:calc(var(--nav-h) + 20px) 20px 20px;
+  overflow-y:auto;
+  opacity:0; pointer-events:none; transition:opacity .2s;
+}
+.modal-overlay.open {
+  opacity:1; pointer-events:all;
+}
+.modal {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:18px; width:100%; max-width:480px;
+  max-height:calc(100vh - var(--nav-h) - 40px); overflow-y:auto;
+  transform:scale(0.95); transition:transform .2s;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.8);
+}
+.modal-overlay.open .modal { transform:scale(1); }
+.modal-head {
+  padding:20px 24px 16px;
+  display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid var(--border);
+  position:sticky; top:0; background:var(--card); z-index:1;
+}
+.modal-title { font-size:18px; font-weight:700; }
+.modal-close {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--card2); border:none; color:var(--text);
+  cursor:pointer; font-size:16px; transition:all .2s;
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-close:hover { background:var(--red); color:#fff; }
+.modal-body { padding:20px 24px; }
+
+/* TopUp Plans */
+.topup-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+  margin-bottom:16px;
+}
+@media(max-width:400px) { .topup-grid { grid-template-columns:1fr; } }
+.topup-card {
+  background:var(--card2); border:2px solid var(--border);
+  border-radius:14px; padding:16px 12px;
+  text-align:center; cursor:pointer;
+  transition:all .2s; position:relative;
+}
+.topup-card:hover, .topup-card.selected {
+  border-color:var(--gold); box-shadow:var(--glow);
+  background:rgba(245,197,24,0.06);
+}
+.topup-card.popular::before {
+  content:'ពេញនិយម';
+  position:absolute; top:-10px; left:50%; transform:translateX(-50%);
+  background:var(--gold); color:#000;
+  font-size:10px; font-weight:700; padding:2px 10px; border-radius:10px;
+}
+.topup-amount { font-size:22px; font-weight:800; color:var(--gold); font-family:var(--font-en); }
+.topup-coins { font-size:28px; margin:8px 0; }
+.topup-coin-count { font-size:18px; font-weight:700; }
+.topup-coin-label { font-size:12px; color:var(--text2); margin-top:4px; }
+
+/* Alert Box */
+.alert-box {
+  background:rgba(245,197,24,0.08); border:1px solid rgba(245,197,24,0.3);
+  border-radius:10px; padding:14px 16px;
+  font-size:13px; color:var(--text); line-height:1.7;
+  margin-bottom:16px;
+}
+.alert-box.info { border-color:rgba(59,130,246,0.3); background:rgba(59,130,246,0.05); }
+.alert-box.success { border-color:rgba(46,204,113,0.3); background:rgba(46,204,113,0.05); }
+.alert-box.danger { border-color:rgba(230,57,70,0.3); background:rgba(230,57,70,0.05); }
+
+/* Forms */
+.form-group { margin-bottom:16px; }
+.form-label { font-size:13px; color:var(--text2); margin-bottom:6px; display:block; }
+.form-input {
+  width:100%; background:var(--bg2); border:1px solid var(--border);
+  border-radius:10px; padding:11px 14px; color:var(--text);
+  font-size:14px; font-family:var(--font-kh);
+  transition:all .2s; outline:none;
+}
+.form-input:focus { border-color:var(--gold); }
+.form-input::placeholder { color:var(--text3); }
+textarea.form-input { resize:vertical; min-height:80px; }
+
+.btn-primary {
+  width:100%; background:linear-gradient(135deg, var(--gold), var(--gold2));
+  color:#000; font-weight:700; font-size:15px;
+  border:none; border-radius:12px; padding:13px;
+  cursor:pointer; font-family:var(--font-kh); transition:all .2s;
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(245,197,24,0.4); }
+.btn-secondary {
+  width:100%; background:transparent; border:1px solid var(--border);
+  color:var(--text); font-size:15px; border-radius:12px;
+  padding:13px; cursor:pointer; font-family:var(--font-kh); transition:all .2s;
+}
+.btn-secondary:hover { border-color:var(--gold); color:var(--gold); }
+
+/* QR Upload Area */
+.qr-box {
+  border:2px dashed var(--border); border-radius:14px;
+  padding:24px; text-align:center; margin-bottom:16px;
+  cursor:pointer; transition:all .2s; position:relative;
+}
+.qr-box:hover { border-color:var(--gold); }
+.qr-box img { max-width:160px; max-height:160px; border-radius:8px; }
+.qr-box-text { color:var(--text2); font-size:13px; margin-top:10px; }
+
+/* Upload Area */
+.upload-area {
+  border:2px dashed var(--border); border-radius:12px;
+  padding:20px; text-align:center; cursor:pointer;
+  transition:all .2s;
+}
+.upload-area:hover { border-color:var(--gold); background:rgba(245,197,24,0.03); }
+.upload-area i { font-size:28px; color:var(--text2); display:block; margin-bottom:8px; }
+.upload-area p { font-size:12px; color:var(--text2); }
+.upload-area.has-file { border-color:var(--green); background:rgba(46,204,113,0.05); }
+
+/* Tab Switcher */
+.tabs {
+  display:flex; background:var(--card2); border-radius:10px; padding:4px;
+  margin-bottom:20px;
+}
+.tab-btn {
+  flex:1; padding:9px; border:none; background:none;
+  color:var(--text2); border-radius:8px; cursor:pointer;
+  font-family:var(--font-kh); font-size:14px; transition:all .2s;
+}
+.tab-btn.active {
+  background:linear-gradient(135deg, var(--gold), var(--gold2));
+  color:#000; font-weight:700;
+}
+
+/* Stars Rating */
+.star-rating { display:flex; gap:4px; cursor:pointer; }
+.star-rating i { font-size:20px; color:var(--text3); transition:color .15s; }
+.star-rating i.active, .star-rating i:hover { color:var(--gold); }
+
+/* ── WALLET/PROFILE PAGE ── */
+.profile-card {
+  background:var(--card2); border-radius:18px;
+  padding:24px; margin-bottom:20px;
+  border:1px solid var(--border);
+  text-align:center;
+}
+.profile-avatar-big {
+  width:72px; height:72px; border-radius:50%;
+  background:linear-gradient(135deg, var(--gold), #ff6b35);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:800; color:#000;
+  margin:0 auto 12px;
+  border:3px solid rgba(245,197,24,0.3);
+}
+.profile-name { font-size:20px; font-weight:700; margin-bottom:4px; }
+.profile-email { font-size:13px; color:var(--text2); }
+.wallet-balance {
+  background:linear-gradient(135deg, rgba(245,197,24,0.1), rgba(245,197,24,0.05));
+  border:1px solid rgba(245,197,24,0.2); border-radius:14px;
+  padding:20px; text-align:center; margin:16px 0;
+}
+.balance-label { font-size:12px; color:var(--text2); margin-bottom:8px; }
+.balance-amount {
+  font-size:36px; font-weight:800; color:var(--gold);
+  font-family:var(--font-en);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+}
+
+/* Order/History List */
+.order-list { display:flex; flex-direction:column; gap:10px; }
+.order-item {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:12px; padding:14px 16px;
+  display:flex; align-items:center; gap:12px;
+}
+.order-item-icon {
+  width:40px; height:40px; border-radius:10px; flex-shrink:0;
+  background:rgba(245,197,24,0.1);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; color:var(--gold);
+}
+.order-item-info { flex:1; min-width:0; }
+.order-item-title { font-size:14px; font-weight:600; margin-bottom:3px; }
+.order-item-sub { font-size:12px; color:var(--text2); }
+.order-item-right { text-align:right; flex-shrink:0; }
+.order-item-amount { font-size:14px; font-weight:700; color:var(--gold); font-family:var(--font-en); }
+.badge {
+  display:inline-block; padding:2px 10px; border-radius:20px;
+  font-size:10px; font-weight:700; font-family:var(--font-en);
+  text-transform:uppercase;
+}
+.badge.pending { background:rgba(245,197,24,0.15); color:var(--gold); }
+.badge.approved { background:rgba(46,204,113,0.15); color:var(--green); }
+.badge.rejected { background:rgba(230,57,70,0.15); color:var(--red); }
+
+/* ── ADMIN DASHBOARD ── */
+#admin-page { padding:20px; max-width:1200px; margin:0 auto; padding-bottom:80px; }
+.admin-stats {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(160px,1fr));
+  gap:12px; margin-bottom:24px;
+}
+.stat-card {
+  background:var(--card2); border-radius:14px;
+  padding:16px; border:1px solid var(--border);
+}
+.stat-label { font-size:11px; color:var(--text2); margin-bottom:6px; }
+.stat-value { font-size:24px; font-weight:800; }
+.stat-value.gold { color:var(--gold); }
+.stat-value.green { color:var(--green); }
+.stat-value.red { color:var(--red); }
+.stat-value.blue { color:var(--blue); }
+
+.admin-section { margin-bottom:28px; }
+.admin-section-title {
+  font-size:16px; font-weight:700; margin-bottom:14px;
+  padding-bottom:10px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+
+/* Admin Order Cards */
+.admin-order-card {
+  background:var(--card2); border-radius:14px;
+  border:1px solid var(--border); overflow:hidden;
+  margin-bottom:10px;
+}
+.admin-order-header {
+  padding:12px 16px; background:var(--bg3);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.admin-order-id { font-family:var(--font-en); font-size:13px; color:var(--gold); font-weight:700; }
+.admin-order-body { padding:14px 16px; }
+.admin-order-row {
+  display:flex; justify-content:space-between;
+  font-size:13px; margin-bottom:8px;
+}
+.admin-order-row span:first-child { color:var(--text2); }
+.admin-order-actions { display:flex; gap:8px; margin-top:12px; }
+.btn-approve {
+  flex:1; background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3);
+  color:var(--green); border-radius:8px; padding:8px; cursor:pointer;
+  font-family:var(--font-kh); font-size:13px; font-weight:600;
+  transition:all .2s;
+}
+.btn-approve:hover { background:rgba(46,204,113,0.2); }
+.btn-reject {
+  flex:1; background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.3);
+  color:var(--red); border-radius:8px; padding:8px; cursor:pointer;
+  font-family:var(--font-kh); font-size:13px; font-weight:600;
+  transition:all .2s;
+}
+.btn-reject:hover { background:rgba(230,57,70,0.2); }
+.btn-view-proof {
+  background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3);
+  color:var(--blue); border-radius:8px; padding:8px 12px; cursor:pointer;
+  font-family:var(--font-kh); font-size:13px; transition:all .2s;
+}
+.btn-view-proof:hover { background:rgba(59,130,246,0.2); }
+
+/* Admin User List */
+.user-list-item {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 16px; background:var(--card2);
+  border:1px solid var(--border); border-radius:12px;
+  margin-bottom:8px;
+}
+
+/* Movie Admin Form */
+.admin-movie-card {
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:14px; overflow:hidden; margin-bottom:10px;
+}
+.admin-movie-header {
+  display:flex; align-items:center; gap:12px; padding:12px 16px;
+}
+.admin-movie-thumb {
+  width:48px; height:72px; border-radius:6px;
+  object-fit:cover; background:var(--bg3);
+  flex-shrink:0;
+}
+.admin-movie-actions {
+  padding:0 16px 14px;
+  display:flex; gap:8px;
+}
+.btn-sm {
+  padding:6px 14px; border-radius:8px;
+  font-size:12px; cursor:pointer; font-family:var(--font-kh);
+  border:1px solid; transition:all .2s;
+}
+.btn-sm-gold { border-color:var(--gold); color:var(--gold); background:transparent; }
+.btn-sm-gold:hover { background:rgba(245,197,24,0.1); }
+.btn-sm-red { border-color:var(--red); color:var(--red); background:transparent; }
+.btn-sm-red:hover { background:rgba(230,57,70,0.1); }
+.btn-sm-blue { border-color:var(--blue); color:var(--blue); background:transparent; }
+.btn-sm-blue:hover { background:rgba(59,130,246,0.1); }
+
+/* Toast */
+#toast-container {
+  position:fixed; bottom:80px; right:20px; z-index:9999;
+  display:flex; flex-direction:column; gap:8px;
+  pointer-events:none;
+}
+.toast {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:12px 16px;
+  font-size:13px; max-width:320px;
+  box-shadow: var(--shadow);
+  display:flex; align-items:center; gap:10px;
+  animation: toastIn .3s ease;
+  pointer-events:all;
+}
+.toast.success { border-color:rgba(46,204,113,0.4); }
+.toast.error { border-color:rgba(230,57,70,0.4); }
+.toast.info { border-color:rgba(59,130,246,0.4); }
+.toast i { font-size:16px; flex-shrink:0; }
+.toast.success i { color:var(--green); }
+.toast.error i { color:var(--red); }
+.toast.info i { color:var(--blue); }
+@keyframes toastIn {
+  from { opacity:0; transform:translateX(20px); }
+  to { opacity:1; transform:translateX(0); }
+}
+
+/* Empty State */
+.empty-state {
+  text-align:center; padding:48px 24px;
+  color:var(--text2);
+}
+.empty-state i { font-size:48px; color:var(--text3); margin-bottom:16px; display:block; }
+.empty-state h3 { font-size:18px; margin-bottom:8px; color:var(--text); }
+.empty-state p { font-size:13px; line-height:1.6; }
+
+/* Loading Spinner */
+.spinner {
+  width:40px; height:40px; border-radius:50%;
+  border:3px solid var(--border);
+  border-top-color:var(--gold);
+  animation:spin .8s linear infinite;
+  margin:40px auto;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* Divider with text */
+.divider-text {
+  display:flex; align-items:center; gap:12px;
+  color:var(--text3); font-size:12px; margin:16px 0;
+}
+.divider-text::before, .divider-text::after {
+  content:''; flex:1; height:1px; background:var(--border);
+}
+
+/* Proof Modal */
+.proof-img { width:100%; border-radius:10px; }
+
+/* Ep Admin Controls */
+.ep-admin-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px; background:var(--bg3);
+  border-radius:8px; margin-bottom:6px;
+}
+.ep-admin-num {
+  width:32px; height:32px; border-radius:8px;
+  background:var(--card2); border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:13px; flex-shrink:0;
+}
+.ep-admin-title { flex:1; font-size:13px; }
+.ep-admin-video { font-size:11px; color:var(--text2); }
+
+/* Star display */
+.stars-display { display:flex; gap:2px; }
+.stars-display i { font-size:12px; color:var(--gold); }
+.stars-display i.empty { color:var(--text3); }
+
+/* Flex utils */
+.flex { display:flex; } .items-center { align-items:center; }
+.justify-between { justify-content:space-between; }
+.gap-8 { gap:8px; } .gap-12 { gap:12px; }
+.mt-8 { margin-top:8px; } .mt-16 { margin-top:16px; }
+.mb-8 { margin-bottom:8px; } .mb-16 { margin-bottom:16px; }
+.text-gold { color:var(--gold); } .text-sm { font-size:13px; }
+.text-xs { font-size:11px; } .text-muted { color:var(--text2); }
+.fw-700 { font-weight:700; }
+.relative { position:relative; }
+
+/* Search Bar */
+.search-bar {
+  display:flex; align-items:center; gap:10px;
+  background:var(--card2); border:1px solid var(--border);
+  border-radius:12px; padding:0 14px;
+  flex:1; max-width:400px;
+}
+.search-bar i { color:var(--text3); font-size:14px; }
+.search-bar input {
+  flex:1; background:none; border:none; outline:none;
+  color:var(--text); font-size:14px; padding:10px 0;
+  font-family:var(--font-kh);
+}
+.search-bar input::placeholder { color:var(--text3); }
+
+/* Filter Tabs */
+.filter-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+.filter-tab {
+  padding:6px 16px; border-radius:20px;
+  border:1px solid var(--border); background:none;
+  color:var(--text2); cursor:pointer; font-size:13px;
+  font-family:var(--font-kh); transition:all .2s;
+}
+.filter-tab.active { background:var(--gold); border-color:var(--gold); color:#000; font-weight:700; }
+.filter-tab:hover:not(.active) { border-color:var(--gold); color:var(--gold); }
+
+/* Confirm Dialog */
+.confirm-box {
+  background:var(--card2); border-radius:14px;
+  padding:20px; margin-bottom:16px;
+}
+.confirm-box .icon { font-size:36px; text-align:center; margin-bottom:12px; }
+.confirm-box h3 { font-size:16px; font-weight:700; text-align:center; margin-bottom:8px; }
+.confirm-box p { font-size:13px; color:var(--text2); text-align:center; line-height:1.6; }
+.confirm-actions { display:flex; gap:10px; }
+
+:root {
+  --bg: #050814; --bg2: #0a0f1e; --bg3: #0f1628; --card: #111827; --card2: #1a2235;
+  --border: rgba(255,200,50,0.15); --gold: #f5c518; --gold2: #e6a800;
+  --red: #e63946; --green: #2ecc71; --blue: #3b82f6;
+  --text: #f0f4ff; --text2: #8892a4; --text3: #556070;
+  --font-kh: 'Kantumruy Pro', sans-serif; --font-en: 'Rajdhani', sans-serif;
+  --font-display: 'Bebas Neue', sans-serif; --radius: 12px; --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --glow: 0 0 20px rgba(245,197,24,0.2); --nav-h: 64px; --bottom-h: 64px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--font-kh); min-height: 100vh; overflow-x: hidden; }
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--gold2); border-radius:3px; }
+#header { position: fixed; top:0; left:0; right:0; z-index:1000; height: var(--nav-h); background: rgba(5,8,20,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 12px; }
+.logo { display: flex; align-items: center; gap: 8px; text-decoration: none; flex-shrink: 0; }
+.logo-icon { width:34px; height:34px; background: linear-gradient(135deg, var(--gold), var(--gold2)); border-radius: 10px; display: flex; align-items:center; justify-content:center; font-size:16px; }
+.logo-text { font-family: var(--font-display); font-size: 20px; letter-spacing: 1px; background: linear-gradient(135deg, var(--gold), #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header-spacer { flex:1; }
+.desktop-nav { display:flex; gap:6px; align-items:center; }
+.desktop-nav a { color: var(--text2); text-decoration:none; font-size:13px; font-weight:500; padding: 5px 12px; border-radius:8px; transition: all .2s; }
+.desktop-nav a:hover, .desktop-nav a.active { color: var(--gold); background: rgba(245,197,24,0.08); }
+.wallet-chip { display:flex; align-items:center; gap:6px; background: var(--card2); border:1px solid var(--border); border-radius:30px; padding:5px 12px; cursor:pointer; }
+.wallet-chip .coin-icon { color: var(--gold); font-size:14px; }
+.wallet-chip .coin-count { font-weight:800; font-size:14px; color: var(--gold); }
+.btn-topup { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #000; font-weight:700; font-size:12px; border:none; border-radius:30px; padding:6px 14px; cursor:pointer; display:flex; align-items:center; gap:5px; }
+.btn-login { background:transparent; border:1px solid var(--border); color:var(--text); border-radius:30px; padding:6px 14px; font-size:12px; cursor:pointer; }
+.user-avatar { width:34px; height:34px; border-radius:50%; background: linear-gradient(135deg, var(--gold), #ff6b35); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#000; cursor:pointer; border:2px solid var(--border); }
+#app { padding-top: var(--nav-h); min-height: 100vh; }
+.page { display:none; }
+.page.active { display:block; }
+#bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; z-index:1000; height:var(--bottom-h); background:rgba(5,8,20,0.95); backdrop-filter:blur(20px); border-top:1px solid var(--border); flex-direction:row; }
+.bottom-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; color:var(--text3); font-size:10px; background:none; border:none; }
+.bottom-nav-item i { font-size:18px; }
+.bottom-nav-item.active, .bottom-nav-item:hover { color:var(--gold); }
+@media(max-width:768px) { #bottom-nav { display:flex; } #app { padding-bottom:var(--bottom-h); } .desktop-nav { display:none; } .movie-grid { grid-template-columns: repeat(2, 1fr); gap:12px; } }
+.movie-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:16px; }
+.movie-card { background:var(--card); border-radius:var(--radius); overflow:hidden; cursor:pointer; border:1px solid var(--border); transition:all .25s; }
+.movie-card:hover { transform:translateY(-4px); border-color:rgba(245,197,24,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+.movie-thumb { width:100%; aspect-ratio:2/3; background: var(--card2); position:relative; }
+.movie-thumb-img { width:100%; height:100%; object-fit:cover; }
+.movie-free-badge { position:absolute; top:8px; left:8px; background:var(--green); color:#fff; font-size:10px; padding:2px 6px; border-radius:4px; }
+.movie-info { padding:10px; }
+.movie-name { font-size:13px; font-weight:600; margin-bottom:5px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.movie-price { font-size:12px; font-weight:700; color:var(--gold); }
+.episodes-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(80px,1fr)); gap:10px; margin-top:12px; }
+.ep-btn { aspect-ratio:1; background:var(--card2); border:1px solid var(--border); border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; position:relative; }
+.ep-btn.free { border-color:rgba(46,204,113,0.4); }
+.ep-btn.locked { opacity:0.6; cursor:not-allowed; }
+.upload-video-area { border: 2px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all .2s; margin-bottom: 16px; background: var(--bg3); }
+.upload-video-area:hover { border-color: var(--gold); background: rgba(245,197,24,0.05); }
+.admin-stats { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; margin-bottom:24px; }
+.stat-card { background:var(--card2); border-radius:14px; padding:14px; border:1px solid var(--border); }
+.admin-order-card { background:var(--card2); border-radius:14px; border:1px solid var(--border); margin-bottom:12px; overflow:hidden; }
+.admin-order-header { padding:10px 14px; background:var(--bg3); display:flex; justify-content:space-between; }
+.admin-order-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.btn-approve, .btn-reject, .btn-view-proof { padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; border:none; font-weight:600; }
+.btn-approve { background:rgba(46,204,113,0.15); color:var(--green); border:1px solid rgba(46,204,113,0.4); }
+.btn-reject { background:rgba(230,57,70,0.15); color:var(--red); border:1px solid rgba(230,57,70,0.4); }
+.tabs { display:flex; background:var(--card2); border-radius:10px; padding:4px; margin-bottom:20px; }
+.tab-btn { flex:1; padding:8px; border:none; background:none; color:var(--text2); border-radius:8px; cursor:pointer; font-weight:500; }
+.tab-btn.active { background:linear-gradient(135deg, var(--gold), var(--gold2)); color:#000; }
+.modal-overlay { position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:16px; opacity:0; pointer-events:none; transition:opacity .2s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { background:var(--card); border:1px solid var(--border); border-radius:20px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; transform:scale(0.96); transition:transform .2s; }
+.modal-overlay.open .modal { transform:scale(1); }
+.modal-head { padding:16px 20px; display:flex; justify-content:space-between; border-bottom:1px solid var(--border); }
+.form-input { width:100%; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:10px 12px; color:var(--text); font-size:14px; }
+.btn-primary { width:100%; background:linear-gradient(135deg, var(--gold), var(--gold2)); color:#000; font-weight:700; border:none; border-radius:40px; padding:12px; cursor:pointer; }
+.topup-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+.topup-card { background:var(--card2); border:2px solid var(--border); border-radius:14px; padding:14px; text-align:center; cursor:pointer; }
+.topup-card.selected { border-color:var(--gold); background:rgba(245,197,24,0.1); }
+.topup-amount { font-size:20px; font-weight:800; color:var(--gold); }
+.toast-container { position:fixed; bottom:80px; right:16px; z-index:9999; display:flex; flex-direction:column; gap:8px; }
+.toast { background:var(--card); border-radius:12px; padding:10px 14px; font-size:13px; display:flex; gap:8px; border-left:4px solid var(--gold); animation: fadeInUp 0.2s; }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(20px);} to { opacity:1; transform:translateY(0);} }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HEADER ═══ -->
+<header id="header">
+  <a class="logo" href="#" onclick="showPage('home'); closeMobileMenu()">
+    <div class="logo-icon">🎬</div>
+    <span class="logo-text">SABAYWATCH</span>
+  </a>
+
+  <nav class="desktop-nav" id="desktop-nav">
+    <a href="#" onclick="showPage('home')" class="active" id="nav-home">ទំព័រដើម</a>
+    <a href="#" onclick="showPage('movies')" id="nav-movies">ភាពយន្ត</a>
+  </nav>
+
+  <div class="header-spacer"></div>
+
+  <div class="search-bar" style="display:none" id="header-search">
+    <i class="fas fa-search"></i>
+    <input type="text" placeholder="ស្វែងរកភាពយន្ត..." oninput="searchMovies(this.value)">
+  </div>
+
+  <!-- Wallet -->
+  <div class="wallet-chip" id="wallet-chip" onclick="showPage('wallet')" style="display:none">
+    <i class="fas fa-coins coin-icon"></i>
+    <span class="coin-count" id="header-coins">0</span>
+    <span class="coin-label">Coins</span>
+  </div>
+
+  <!-- TopUp -->
+  <button class="btn-topup" id="header-topup" onclick="openModal('topup-modal')" style="display:none">
+    <i class="fas fa-plus"></i> Top Up
+  </button>
+
+  <!-- Notifications -->
+  <div class="relative" id="notif-wrap" style="display:none">
+    <button class="notif-btn" onclick="toggleDropdown('notif-dd')">
+      <i class="fas fa-bell"></i>
+      <span class="notif-badge" id="notif-badge" style="display:none"></span>
+    </button>
+    <div class="notif-dropdown" id="notif-dd" style="display:none">
+      <div class="notif-head">🔔 ការជូនដំណឹង</div>
+      <div class="notif-list" id="notif-list">
+        <div class="empty-state" style="padding:24px">
+          <i class="fas fa-bell-slash" style="font-size:28px;color:var(--text3);display:block;margin-bottom:8px"></i>
+          <p>គ្មានការជូនដំណឹង</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Avatar -->
+  <div class="relative" id="user-menu-wrap" style="display:none">
+    <div class="user-avatar" id="user-avatar" onclick="toggleDropdown('user-dd')">U</div>
+    <div class="dropdown" id="user-dd" style="display:none">
+      <div class="dropdown-header">
+        <div class="dropdown-username" id="dd-username">User</div>
+        <div class="dropdown-email" id="dd-email">user@email.com</div>
+      </div>
+      <button class="dropdown-item" onclick="showPage('profile'); closeDropdowns()">
+        <i class="fas fa-user"></i> គណនីរបស់ខ្ញុំ
+      </button>
+      <button class="dropdown-item" onclick="showPage('wallet'); closeDropdowns()">
+        <i class="fas fa-wallet"></i> កាបូបរបស់ខ្ញុំ
+      </button>
+      <button class="dropdown-item" onclick="openModal('topup-modal'); closeDropdowns()">
+        <i class="fas fa-plus-circle"></i> បន្ថែម Coins
+      </button>
+      <button class="dropdown-item" onclick="showPage('history'); closeDropdowns()">
+        <i class="fas fa-history"></i> ប្រវត្តិការទិញ
+      </button>
+      <div class="dropdown-divider"></div>
+      <button class="dropdown-item" onclick="logout()" style="color:var(--red)">
+        <i class="fas fa-sign-out-alt" style="color:var(--red)"></i> ចាកចេញ
+      </button>
+    </div>
+  </div>
+
+  <!-- Login Button (Guest) -->
+  <button class="btn-login" id="header-login" onclick="openModal('auth-modal')">
+    <i class="fas fa-sign-in-alt"></i> ចូល
+  </button>
+
+  <!-- Mobile Hamburger Menu Button -->
+  <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()">
+    <i class="fas fa-bars"></i>
+  </button>
+</header>
+
+<!-- Mobile Menu Backdrop -->
+<div class="mobile-menu-backdrop" id="mobile-menu-backdrop" onclick="closeMobileMenu()"></div>
+
+<!-- Mobile Menu -->
+<nav class="mobile-menu" id="mobile-menu">
+  <button class="mobile-menu-item" onclick="showPage('home'); closeMobileMenu()">
+    <i class="fas fa-home"></i> ទំព័រដើម
+  </button>
+  <button class="mobile-menu-item" onclick="showPage('movies'); closeMobileMenu()">
+    <i class="fas fa-film"></i> ភាពយន្ត
+  </button>
+  <div class="mobile-menu-divider"></div>
+  <button class="mobile-menu-item" id="mobile-wallet-item" onclick="showPage('wallet'); closeMobileMenu()" style="display:none">
+    <i class="fas fa-wallet"></i> កាបូប (<span id="mobile-coins">0</span>)
+  </button>
+  <button class="mobile-menu-item" onclick="openModal('topup-modal'); closeMobileMenu()" id="mobile-topup-item" style="display:none">
+    <i class="fas fa-plus-circle"></i> បន្ថែម Coins
+  </button>
+  <button class="mobile-menu-item" id="mobile-profile-item" onclick="handleProfileNav(); closeMobileMenu()" style="display:none">
+    <i class="fas fa-user"></i> គណនីរបស់ខ្ញុំ
+  </button>
+  <div class="mobile-menu-divider" id="mobile-menu-divider-2" style="display:none"></div>
+  <button class="mobile-menu-item" id="mobile-login-item" onclick="openModal('auth-modal'); closeMobileMenu()">
+    <i class="fas fa-sign-in-alt"></i> ចូល
+  </button>
+  <button class="mobile-menu-item" id="mobile-logout-item" onclick="logout()" style="display:none; color:var(--red)">
+    <i class="fas fa-sign-out-alt"></i> ចាកចេញ
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════ MAIN APP ═══ -->
+<div id="app">
+
+  <!-- ── HOME PAGE ── -->
+  <div class="page active" id="home-page">
+    <div class="hero-banner">
+      <div class="hero-bg-grid"></div>
+      <div class="hero-content">
+        <div class="hero-badge"><i class="fas fa-fire"></i> ភាពយន្តថ្មីៗ</div>
+        <div class="hero-title">SABAY<br>WATCH</div>
+        <p class="hero-sub">មើលភាពយន្ត និងខ្សែភ្លេងដែលនិយាយជាភាសាខ្មែរ<br>ទស្សនាបានគ្រប់ទីកន្លែង</p>
+        <button class="hero-btn" onclick="showPage('movies')">
+          <i class="fas fa-play"></i> ចាប់ផ្ដើមមើល
+        </button>
+      </div>
+    </div>
+
+    <div class="section" id="featured-section">
+      <div class="section-header">
+        <div class="section-title">🔥 ភាពយន្តពេញនិយម</div>
+        <a href="#" class="section-more" onclick="showPage('movies')">មើលទាំងអស់</a>
+      </div>
+      <div class="movie-grid" id="home-featured-grid">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <div class="section" id="new-section">
+      <div class="section-header">
+        <div class="section-title">✨ ភាពយន្តថ្មីៗ</div>
+        <a href="#" class="section-more" onclick="showPage('movies')">មើលទាំងអស់</a>
+      </div>
+      <div class="movie-grid" id="home-new-grid">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MOVIES PAGE ── -->
+  <div class="page" id="movies-page">
+    <div class="section">
+      <div class="section-header" style="margin-bottom:16px">
+        <div class="section-title">🎬 ភាពយន្តទាំងអស់</div>
+      </div>
+      <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap">
+        <div class="search-bar" style="display:flex; max-width:100%; flex:1">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="ស្វែងរកភាពយន្ត..." oninput="filterMovies(this.value)">
+        </div>
+      </div>
+      <div class="movie-grid" id="all-movies-grid">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MOVIE DETAIL PAGE ── -->
+  <div class="page" id="movie-detail-page">
+    <div class="movie-detail-hero" id="detail-hero">
+      <img id="detail-bg" class="movie-detail-bg" src="" alt="">
+      <div class="movie-detail-overlay"></div>
+      <div class="movie-detail-content">
+        <div class="movie-detail-poster">
+          <img id="detail-poster" src="" alt="">
+        </div>
+        <div class="movie-detail-info">
+          <button class="btn-back" onclick="goBack()" style="margin-bottom:12px">
+            <i class="fas fa-arrow-left"></i> ត្រលប់
+          </button>
+          <div class="movie-detail-title" id="detail-title">ភាពយន្ត</div>
+          <div class="movie-detail-stars">
+            <div class="stars" id="detail-stars">★★★★★</div>
+            <div class="count" id="detail-rating-count">(0)</div>
+          </div>
+          <p class="movie-note-text" id="detail-note"></p>
+          <div class="movie-price-row">
+            <div class="movie-price-big" id="detail-price"></div>
+            <button class="btn-buy" id="detail-buy-btn" onclick="buyMovie()">
+              <i class="fas fa-shopping-cart"></i> ទិញភាពយន្ត
+            </button>
+            <span id="detail-owned-badge" style="display:none; background:var(--green); color:#fff; padding:6px 14px; border-radius:8px; font-size:13px">
+              ✅ មានហើយ
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Player -->
+    <div class="video-wrap" id="video-section" style="display:none">
+      <video id="main-video" controls controlsList="nodownload">
+        <source id="video-source" src="" type="video/mp4">
+      </video>
+    </div>
+    <div class="video-wrap" id="video-placeholder-section">
+      <div class="video-placeholder">
+        <div class="play-icon-big" onclick="tryPlayEp()">
+          <i class="fas fa-play" style="margin-left:3px"></i>
+        </div>
+        <p style="color:var(--text2); font-size:14px" id="video-ph-text">ជ្រើសរើសសំណុំភ្លេង</p>
+      </div>
+    </div>
+
+    <!-- Episodes -->
+    <div class="episodes-section">
+      <div class="episodes-header">
+        <i class="fas fa-list-ol" style="color:var(--gold)"></i>
+        <span>ភ្លេង / Episode</span>
+        <span style="font-size:12px; color:var(--text2); font-weight:400" id="ep-free-note"></span>
+      </div>
+      <div class="episodes-grid" id="episodes-grid"></div>
+    </div>
+
+    <!-- Rating Section -->
+    <div class="section" id="rating-section">
+      <div class="section-title" style="margin-bottom:16px">⭐ ពិន្ទុ</div>
+      <div style="display:flex; align-items:center; gap:16px">
+        <div style="font-size:48px; font-weight:800; color:var(--gold)" id="avg-rating">0.0</div>
+        <div>
+          <div class="stars-display" id="avg-stars-display"></div>
+          <div style="font-size:12px; color:var(--text2); margin-top:4px" id="total-ratings">0 ការវាយតម្លៃ</div>
+        </div>
+      </div>
+      <div id="user-rating-section" style="margin-top:16px; display:none">
+        <p style="font-size:13px; color:var(--text2); margin-bottom:8px">ការវាយតម្លៃរបស់អ្នក</p>
+        <div class="star-rating" id="user-star-rating" onclick="setUserRating(event)">
+          <i class="fas fa-star" data-val="1"></i>
+          <i class="fas fa-star" data-val="2"></i>
+          <i class="fas fa-star" data-val="3"></i>
+          <i class="fas fa-star" data-val="4"></i>
+          <i class="fas fa-star" data-val="5"></i>
+        </div>
+        <button class="btn-primary" style="margin-top:10px; max-width:180px" onclick="submitRating()">
+          ដាក់ពិន្ទុ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── WALLET PAGE ── -->
+  <div class="page" id="wallet-page">
+    <div class="section" style="max-width:600px">
+      <div class="profile-card">
+        <div class="profile-avatar-big" id="wallet-avatar">U</div>
+        <div class="profile-name" id="wallet-username">User</div>
+        <div class="profile-email" id="wallet-email">user@email.com</div>
+        <div class="wallet-balance">
+          <div class="balance-label">ចំនួន Coins របស់អ្នក</div>
+          <div class="balance-amount">
+            <i class="fas fa-coins" style="font-size:28px"></i>
+            <span id="wallet-coins">0</span>
+          </div>
+        </div>
+        <button class="btn-topup" style="width:100%; justify-content:center; padding:13px" onclick="openModal('topup-modal')">
+          <i class="fas fa-plus"></i> បន្ថែម Coins
+        </button>
+      </div>
+
+      <div class="section-title" style="margin-bottom:14px">📋 ប្រវត្តិ TopUp</div>
+      <div id="topup-history-list">
+        <div class="empty-state">
+          <i class="fas fa-receipt"></i>
+          <h3>គ្មានប្រវត្តិ</h3>
+          <p>អ្នកមិនទាន់បានធ្វើ TopUp ណាមួយ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROFILE PAGE ── -->
+  <div class="page" id="profile-page">
+    <div class="section" style="max-width:600px">
+      <div class="profile-card">
+        <div class="profile-avatar-big" id="profile-avatar">U</div>
+        <div class="profile-name" id="profile-username">User</div>
+        <div class="profile-email" id="profile-email">user@email.com</div>
+      </div>
+      <div class="order-list" id="profile-stats" style="margin-bottom:20px">
+        <div class="order-item">
+          <div class="order-item-icon"><i class="fas fa-coins"></i></div>
+          <div class="order-item-info">
+            <div class="order-item-title">Coins</div>
+            <div class="order-item-sub">ចំនួន Coins បច្ចុប្បន្ន</div>
+          </div>
+          <div class="order-item-right">
+            <div class="order-item-amount" id="profile-coins-display">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY PAGE ── -->
+  <div class="page" id="history-page">
+    <div class="section">
+      <div class="section-title" style="margin-bottom:16px">🎬 ភាពយន្តដែលបានទិញ</div>
+      <div id="purchase-history-list">
+        <div class="empty-state">
+          <i class="fas fa-film"></i>
+          <h3>គ្មានប្រវត្តិ</h3>
+          <p>អ្នកមិនទាន់បានទិញភាពយន្តណាមួយ</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ADMIN PAGE ── -->
+  <div class="page" id="admin-page">
+    <div class="section-title" style="font-size:22px; margin-bottom:20px; padding:0 4px">
+      🛡️ Admin Dashboard
+    </div>
+
+    <div class="admin-stats" id="admin-stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Users</div>
+        <div class="stat-value blue" id="stat-users">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Movies</div>
+        <div class="stat-value gold" id="stat-movies">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value red" id="stat-pending">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Approved</div>
+        <div class="stat-value green" id="stat-approved">0</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs" style="max-width:600px; margin-bottom:24px">
+      <button class="tab-btn active" onclick="switchAdminTab('orders', this)">TopUp Orders</button>
+      <button class="tab-btn" onclick="switchAdminTab('users', this)">Users</button>
+      <button class="tab-btn" onclick="switchAdminTab('movies', this)">Movies</button>
+      <button class="tab-btn" onclick="switchAdminTab('settings', this)">Settings</button>
+    </div>
+
+    <!-- Orders Tab -->
+    <div id="admin-tab-orders" class="admin-section">
+      <div class="admin-section-title">
+        <span>📦 TopUp Requests</span>
+        <button class="btn-sm btn-sm-blue" onclick="loadAdminOrders()">
+          <i class="fas fa-sync"></i> Refresh
+        </button>
+      </div>
+      <div id="admin-orders-list"></div>
+    </div>
+
+    <!-- Users Tab -->
+    <div id="admin-tab-users" class="admin-section" style="display:none">
+      <div class="admin-section-title">
+        <span>👥 All Users</span>
+        <button class="btn-sm btn-sm-blue" onclick="loadAdminUsers()">
+          <i class="fas fa-sync"></i> Refresh
+        </button>
+      </div>
+      <div id="admin-users-list"></div>
+    </div>
+
+    <!-- Movies Tab -->
+    <div id="admin-tab-movies" class="admin-section" style="display:none">
+      <div class="admin-section-title">
+        <span>🎬 Manage Movies</span>
+        <button class="btn-sm btn-sm-gold" onclick="openModal('add-movie-modal')">
+          <i class="fas fa-plus"></i> Add Movie
+        </button>
+      </div>
+      <div id="admin-movies-list"></div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="admin-tab-settings" class="admin-section" style="display:none">
+      <div class="admin-section-title">⚙️ Settings</div>
+      <div style="max-width:500px">
+        <div style="margin-bottom:24px">
+          <h3 style="font-size:15px; margin-bottom:14px; color:var(--text2)">💳 QR Payment Code</h3>
+          <div class="qr-box" onclick="document.getElementById('admin-qr-upload').click()">
+            <img id="admin-qr-preview" src="" alt="" style="display:none">
+            <div id="admin-qr-placeholder">
+              <i class="fas fa-qrcode" style="font-size:48px; color:var(--text3)"></i>
+              <div class="qr-box-text">ចុចដើម្បីផ្លាស់ប្ដូរ QR Code</div>
+            </div>
+          </div>
+          <input type="file" id="admin-qr-upload" accept="image/*" style="display:none" onchange="uploadQR(this)">
+          <button class="btn-primary" style="max-width:200px; margin-top:12px" onclick="document.getElementById('admin-qr-upload').click()">
+            <i class="fas fa-upload"></i> Upload QR
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- ═══════════════════════════════════════════ BOTTOM NAV ═══ -->
+<nav id="bottom-nav">
+  <button class="bottom-nav-item active" id="bn-home" onclick="showPage('home'); setActiveNav('bn-home')">
+    <i class="fas fa-home"></i><span>ដើម</span>
+  </button>
+  <button class="bottom-nav-item" id="bn-movies" onclick="showPage('movies'); setActiveNav('bn-movies')">
+    <i class="fas fa-film"></i><span>ភាពយន្ត</span>
+  </button>
+  <button class="bottom-nav-item" id="bn-topup" onclick="openModal('topup-modal')">
+    <i class="fas fa-plus-circle" style="color:var(--gold)"></i><span>TopUp</span>
+  </button>
+  <button class="bottom-nav-item" id="bn-wallet" onclick="showPage('wallet'); setActiveNav('bn-wallet')">
+    <i class="fas fa-wallet"></i><span>កាបូប</span>
+  </button>
+  <button class="bottom-nav-item" id="bn-profile" onclick="handleProfileNav()">
+    <i class="fas fa-user"></i><span>គណនី</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════ MODALS ═══ -->
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <span class="modal-title" id="auth-modal-title">🔐 ចូលគណនី</span>
+      <button class="modal-close" onclick="closeModal('auth-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchAuthTab('login', this)">ចូល</button>
+        <button class="tab-btn" onclick="switchAuthTab('register', this)">ចុះឈ្មោះ</button>
+      </div>
+      <!-- Login -->
+      <div id="auth-login-form">
+        <div class="form-group">
+          <label class="form-label">អ៊ីមែល</label>
+          <input class="form-input" type="email" id="login-email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ពាក្យសម្ងាត់</label>
+          <input class="form-input" type="password" id="login-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="doLogin()">
+          <i class="fas fa-sign-in-alt"></i> ចូលគណនី
+        </button>
+      </div>
+      <!-- Register -->
+      <div id="auth-register-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">ឈ្មោះ</label>
+          <input class="form-input" type="text" id="reg-name" placeholder="ឈ្មោះពេញ">
+        </div>
+        <div class="form-group">
+          <label class="form-label">អ៊ីមែល</label>
+          <input class="form-input" type="email" id="reg-email" placeholder="your@email.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ពាក្យសម្ងាត់</label>
+          <input class="form-input" type="password" id="reg-pass" placeholder="••••••••">
+        </div>
+        <button class="btn-primary" onclick="doRegister()">
+          <i class="fas fa-user-plus"></i> ចុះឈ្មោះ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOPUP MODAL -->
+<div class="modal-overlay" id="topup-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">💰 បន្ថែម Coins</span>
+      <button class="modal-close" onclick="closeModal('topup-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="topup-modal-body">
+      <!-- Step 1: Choose plan -->
+      <div id="topup-step-1">
+        <p style="font-size:13px; color:var(--text2); margin-bottom:16px">ជ្រើសរើសចំនួន Coins</p>
+        <div class="topup-grid">
+          <div class="topup-card" onclick="selectPlan(this,'1',3)">
+            <div class="topup-amount">$1</div>
+            <div class="topup-coins">🪙</div>
+            <div class="topup-coin-count">3 Coins</div>
+            <div class="topup-coin-label">1 Coin = $0.33</div>
+          </div>
+          <div class="topup-card popular" onclick="selectPlan(this,'2',6)">
+            <div class="topup-amount">$2</div>
+            <div class="topup-coins">🪙🪙</div>
+            <div class="topup-coin-count">6 Coins</div>
+            <div class="topup-coin-label">1 Coin = $0.33</div>
+          </div>
+          <div class="topup-card" onclick="selectPlan(this,'5',18)">
+            <div class="topup-amount">$5</div>
+            <div class="topup-coins">💰</div>
+            <div class="topup-coin-count">18 Coins</div>
+            <div class="topup-coin-label">1 Coin = $0.28</div>
+          </div>
+        </div>
+        <div class="alert-box" id="topup-warning-box" style="display:none">
+          <strong>⚠️ ចំណាំ:</strong><br>
+          សូមធ្វើការរងចាំ Admin approve your payment ដើម្បីពិនិត្យទឹកប្រាក់ដែរលោកអ្នកបានទូទាត់ត្រឹមត្រូវពិតប្រាកដ៏! សូមអរគុណ។
+        </div>
+        <button class="btn-primary" id="topup-next-btn" onclick="goTopupStep2()" style="display:none; margin-top:8px">
+          បន្ត <i class="fas fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Step 2: Payment -->
+      <div id="topup-step-2" style="display:none">
+        <div style="text-align:center; margin-bottom:16px">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px">
+            ទូទាត់ <span id="plan-amount-show" class="text-gold"></span> → ទទួល <span id="plan-coins-show" class="text-gold"></span> Coins
+          </p>
+          <p style="font-size:12px; color:var(--text2)">ស្កេន QR ខាងក្រោម</p>
+        </div>
+        <div class="qr-box" style="cursor:default">
+          <img id="payment-qr-img" src="" alt="QR" style="max-width:200px; max-height:200px; border-radius:8px">
+          <div id="no-qr-msg" style="display:none">
+            <i class="fas fa-qrcode" style="font-size:48px; color:var(--text3)"></i>
+            <p class="qr-box-text">Admin ហ្LabyrinthQR ប្រចាំ</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ផ្ទុកកូដបង់ (Receipt)</label>
+          <div class="upload-area" id="receipt-upload-area" onclick="document.getElementById('receipt-file').click()">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>ចុចដើម្បីផ្ទុករូបភាព Receipt</p>
+          </div>
+          <input type="file" id="receipt-file" accept="image/*" style="display:none" onchange="previewReceipt(this)">
+        </div>
+        <div style="display:flex; gap:10px">
+          <button class="btn-secondary" style="max-width:120px" onclick="backTopupStep1()">
+            <i class="fas fa-arrow-left"></i> ត្រលប់
+          </button>
+          <button class="btn-primary" onclick="submitTopup()">
+            <i class="fas fa-paper-plane"></i> ដាក់ស្នើ
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BUY MOVIE CONFIRM MODAL -->
+<div class="modal-overlay" id="buy-confirm-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head">
+      <span class="modal-title">🛒 ទិញភាពយន្ត</span>
+      <button class="modal-close" onclick="closeModal('buy-confirm-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="confirm-box">
+        <div class="icon">🎬</div>
+        <h3 id="buy-movie-name-confirm">ភាពយន្ត</h3>
+        <p>តម្លៃ: <span id="buy-price-confirm" class="text-gold fw-700"></span></p>
+        <p style="margin-top:8px">Coins នៅសល់: <span id="buy-coins-after" class="text-gold fw-700"></span></p>
+      </div>
+      <div class="confirm-actions">
+        <button class="btn-secondary" onclick="closeModal('buy-confirm-modal')">បោះបង់</button>
+        <button class="btn-primary" onclick="confirmBuyMovie()">
+          <i class="fas fa-check"></i> បញ្ជាក់ទិញ
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MOVIE MODAL -->
+<div class="modal-overlay" id="add-movie-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <span class="modal-title" id="movie-modal-title">➕ បន្ថែមភាពយន្ត</span>
+      <button class="modal-close" onclick="closeModal('add-movie-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="movie-edit-id">
+      <div class="form-group">
+        <label class="form-label">ឈ្មោះភាពយន្ត</label>
+        <input class="form-input" type="text" id="movie-name-input" placeholder="ឈ្មោះភាពយន្ត">
+      </div>
+      <div class="form-group">
+        <label class="form-label">ពណ៌នា / Note</label>
+        <textarea class="form-input" id="movie-note-input" rows="3" placeholder="ពណ៌នាអំពីភាពយន្ត"></textarea>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <div class="form-group">
+          <label class="form-label">តម្លៃ (Coins)</label>
+          <input class="form-input" type="number" id="movie-price-input" placeholder="ឧ: 5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">EP ឥតគិតថ្លៃ</label>
+          <input class="form-input" type="number" id="movie-free-ep-input" value="2" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Thumbnail (URL ឬ Upload)</label>
+        <input class="form-input" type="text" id="movie-thumb-url" placeholder="URL រូបភាព Thumbnail">
+        <div style="text-align:center; color:var(--text3); font-size:12px; margin:8px 0">ឬ</div>
+        <div class="upload-area" onclick="document.getElementById('movie-thumb-file').click()">
+          <i class="fas fa-image"></i>
+          <p>Upload Thumbnail</p>
+        </div>
+        <input type="file" id="movie-thumb-file" accept="image/*" style="display:none" onchange="uploadMovieThumb(this)">
+      </div>
+      <button class="btn-primary" onclick="saveMovie()">
+        <i class="fas fa-save"></i> រក្សាទុក
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EPISODE MODAL -->
+<div class="modal-overlay" id="add-ep-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <span class="modal-title" id="ep-modal-title">🎞️ បន្ថែម Episode</span>
+      <button class="modal-close" onclick="closeModal('add-ep-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ep-movie-id">
+      <input type="hidden" id="ep-edit-index" value="-1">
+      <div class="form-group">
+        <label class="form-label">ចំណងជើង EP</label>
+        <input class="form-input" type="text" id="ep-title-input" placeholder="ឧ: EP 1 - ការចាប់ផ្ដើម">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Video URL (Cloudinary / direct mp4)</label>
+        <input class="form-input" type="text" id="ep-video-url" placeholder="https://...mp4">
+        <div style="text-align:center; color:var(--text3); font-size:12px; margin:8px 0">ឬ</div>
+        <div class="upload-video-area" onclick="document.getElementById('ep-video-file').click()" style="cursor:pointer">
+          <i class="fas fa-video" style="font-size:24px;color:var(--gold);margin-bottom:8px;display:block"></i>
+          <p style="margin:0;color:var(--text2)">Upload Video File</p>
+        </div>
+        <input type="file" id="ep-video-file" accept="video/*" style="display:none" onchange="uploadEpisodeVideo(this)">
+      </div>
+      <button class="btn-primary" onclick="saveEpisode()">
+        <i class="fas fa-save"></i> រក្សាទុក
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE EPS MODAL -->
+<div class="modal-overlay" id="manage-eps-modal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-head">
+      <span class="modal-title">📋 គ្រប់គ្រង Episodes</span>
+      <button class="modal-close" onclick="closeModal('manage-eps-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="ep-manage-list"></div>
+      <button class="btn-primary" style="margin-top:12px" onclick="addEpForMovie()">
+        <i class="fas fa-plus"></i> បន្ថែម Episode ថ្មី
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW PROOF MODAL -->
+<div class="modal-overlay" id="proof-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <span class="modal-title">🧾 Payment Proof</span>
+      <button class="modal-close" onclick="closeModal('proof-modal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <img id="proof-img-el" src="" alt="Receipt" class="proof-img">
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════ JS ═══ -->
+<script>
+// ======================= CONFIG (REAL FIREBASE + CLOUDINARY) =======================
+const firebaseConfig = {
+  apiKey: "AIzaSyBVkC3a_MtMWX89R99AGTRvYbqqcr1YQ64",
+  authDomain: "sabaywatch-1d37e.firebaseapp.com",
+  projectId: "sabaywatch-1d37e",
+  storageBucket: "sabaywatch-1d37e.firebasestorage.app",
+  messagingSenderId: "836372580426",
+  appId: "1:836372580426:web:e684b7c6f04badf108beb3"
+};
+
+// Cloudinary config
+const CLOUDINARY_CLOUD = "dismpss5e";
+const CLOUDINARY_PRESET = "SabayWatch";
+
+// Admin email
+const ADMIN_EMAIL = "admin@sabaywatch.com";
+
+// ─── INIT FIREBASE ───
+let app, auth, db;
+let currentUser = null;
+let currentUserData = null;
+let currentMovieId = null;
+let currentEpIndex = null;
+let selectedPlanAmount = null;
+let selectedPlanCoins = null;
+let selectedPlanCard = null;
+let receiptDataUrl = null;
+let receiptFile = null;
+let userRating = 0;
+let pageHistory = [];
+let allMovies = [];
+let managingMovieId = null;
+
+// Demo mode flag (set true when Firebase not configured)
+let demoMode = false;
+
+function initFirebase() {
+  try {
+    if (firebaseConfig.apiKey === "AIzaSyDemo-ReplaceWithYourKey") {
+      demoMode = true;
+      console.log("Demo mode: Firebase not configured");
+      initDemoMode();
+      return;
+    }
+    firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+    auth.onAuthStateChanged(onAuthChanged);
+  } catch(e) {
+    demoMode = true;
+    initDemoMode();
+  }
+}
+
+// ─── DEMO DATA ───
+let demoMovies = [
+  { id:'m1', name:'ស្នេហ៍ក្នុងព្រៃ', note:'រឿងស្នេហ៍ដ៏감动ដែលកើតឡើងក្នុងព្រៃភ្នំ', price:5, freeEps:2, thumbUrl:'', avgRating:4.5, ratingCount:12, episodes:[{title:'EP 1 - ការចាប់ផ្ដើម', videoUrl:''},{title:'EP 2 - ការជួប', videoUrl:''},{title:'EP 3 - ការបែករ', videoUrl:''}], createdAt: Date.now()-86400000 },
+  { id:'m2', name:'អ្នកស៊ើបការណ៍', note:'ភាពយន្តបញ្ញា ការស៊ើបអង្កេតរឿងខ្មោចនៅក្នុងក្រុង', price:8, freeEps:2, thumbUrl:'', avgRating:4.8, ratingCount:25, episodes:[{title:'EP 1 - ករណីទី១', videoUrl:''},{title:'EP 2 - ទ្រឹស្ដី', videoUrl:''}], createdAt: Date.now()-172800000 },
+  { id:'m3', name:'ក្នុងក្ដីស្រម៉ៃ', note:'ភាពយន្តប្រឌិត ការដំណើរតាមគំនិតស្រម៉ៃ', price:6, freeEps:2, thumbUrl:'', avgRating:3.9, ratingCount:8, episodes:[{title:'EP 1', videoUrl:''},{title:'EP 2', videoUrl:''},{title:'EP 3', videoUrl:''},{title:'EP 4', videoUrl:''}], createdAt: Date.now()-259200000 },
+  { id:'m4', name:'ព្យុះស្នេហ៍', note:'ស្នេហ៍ក្នុងព្យុះ ជីវិតពណ៌ប្រផេះ', price:4, freeEps:2, thumbUrl:'', avgRating:4.2, ratingCount:18, episodes:[{title:'EP 1', videoUrl:''},{title:'EP 2', videoUrl:''}], createdAt: Date.now() },
+];
+let demoUsers = [
+  { uid:'u1', name:'Demo User', email:'demo@test.com', coins:10, purchases:[], topupHistory:[], notifications:[] }
+];
+let demoOrders = [];
+let demoSettings = { qrUrl: '' };
+
+function initDemoMode() {
+  showToast('info', 'Demo Mode - Firebase មិនទាន់ Connect', 4000);
+  renderAuthUI(null);
+  loadMovies();
+}
+
+// ─── AUTH ───
+function onAuthChanged(user) {
+  if (user) {
+    currentUser = user;
+    loadUserData(user.uid);
+    if (user.email === ADMIN_EMAIL) {
+      showAdminUI();
+    }
+    renderAuthUI(user);
+  } else {
+    currentUser = null;
+    currentUserData = null;
+    renderAuthUI(null);
+  }
+}
+
+function renderAuthUI(user) {
+  const loggedIn = !!user;
+  const isAdmin = user && user.email === ADMIN_EMAIL;
+
+  el('header-login').style.display = loggedIn ? 'none' : '';
+  el('wallet-chip').style.display = loggedIn ? '' : 'none';
+  el('header-topup').style.display = loggedIn ? '' : 'none';
+  el('notif-wrap').style.display = loggedIn ? '' : 'none';
+  el('user-menu-wrap').style.display = loggedIn ? '' : 'none';
+  updateMobileMenuAuth(loggedIn);
+
+  if (loggedIn) {
+    const name = user.displayName || user.email.split('@')[0];
+    el('user-avatar').textContent = name[0].toUpperCase();
+    el('dd-username').textContent = name;
+    el('dd-email').textContent = user.email;
+    if (isAdmin) {
+      let adminBtn = document.getElementById('nav-admin');
+      if (!adminBtn) {
+        const nav = el('desktop-nav');
+        const a = document.createElement('a');
+        a.href = '#'; a.id = 'nav-admin'; a.textContent = '🛡️ Admin';
+        a.onclick = () => showPage('admin');
+        nav.appendChild(a);
+      }
+    }
+  }
+}
+
+async function loadUserData(uid) {
+  if (demoMode) {
+    currentUserData = demoUsers.find(u => u.uid === uid) || demoUsers[0];
+    updateWalletUI();
+    loadNotifications();
+    return;
+  }
+  try {
+    const snap = await db.collection('users').doc(uid).get();
+    if (snap.exists) {
+      currentUserData = snap.data();
+    } else {
+      currentUserData = { uid, name: currentUser.displayName||'', email: currentUser.email, coins:0, purchases:[], topupHistory:[], notifications:[] };
+      await db.collection('users').doc(uid).set(currentUserData);
+    }
+    updateWalletUI();
+    loadNotifications();
+  } catch(e) { console.error(e); }
+}
+
+function updateWalletUI() {
+  if (!currentUserData) return;
+  const c = currentUserData.coins || 0;
+  el('header-coins').textContent = c;
+  el('wallet-coins').textContent = c;
+  el('profile-coins-display').textContent = c;
+  if (el('wallet-avatar')) el('wallet-avatar').textContent = (currentUserData.name||'U')[0].toUpperCase();
+  if (el('wallet-username')) el('wallet-username').textContent = currentUserData.name||'User';
+  if (el('wallet-email')) el('wallet-email').textContent = currentUserData.email||'';
+  if (el('profile-avatar')) el('profile-avatar').textContent = (currentUserData.name||'U')[0].toUpperCase();
+  if (el('profile-username')) el('profile-username').textContent = currentUserData.name||'User';
+  if (el('profile-email')) el('profile-email').textContent = currentUserData.email||'';
+}
+
+async function doLogin() {
+  const email = el('login-email').value.trim();
+  const pass = el('login-pass').value;
+  if (!email||!pass) { showToast('error','សូមបំពេញទំព័រ'); return; }
+
+  if (demoMode) {
+    // Demo login
+    const u = demoUsers.find(u => u.email===email);
+    if (!u && email!==ADMIN_EMAIL) { showToast('error','គ្មានគណនីនេះ'); return; }
+    const uid = email===ADMIN_EMAIL ? 'admin' : u.uid;
+    const name = email===ADMIN_EMAIL ? 'Admin' : u.name;
+    currentUser = { uid, email, displayName:name };
+    if (email===ADMIN_EMAIL) currentUserData = { uid:'admin', name:'Admin', email:ADMIN_EMAIL, coins:999, purchases:[], topupHistory:[], notifications:[] };
+    else currentUserData = u;
+    renderAuthUI(currentUser);
+    updateWalletUI();
+    closeModal('auth-modal');
+    showToast('success','ចូលដោយជោគជ័យ!');
+    if (email===ADMIN_EMAIL) { showPage('admin'); loadAdminData(); }
+    return;
+  }
+
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    closeModal('auth-modal');
+    showToast('success','ចូលដោយជោគជ័យ!');
+    if (email===ADMIN_EMAIL) { showPage('admin'); loadAdminData(); }
+  } catch(e) {
+    showToast('error', 'អ៊ីមែល ឬ ពាក្យសម្ងាត់ខុស');
+  }
+}
+
+async function doRegister() {
+  const name = el('reg-name').value.trim();
+  const email = el('reg-email').value.trim();
+  const pass = el('reg-pass').value;
+  if (!name||!email||!pass) { showToast('error','សូមបំពេញព័ត៌មានទាំងអស់'); return; }
+  if (pass.length < 6) { showToast('error','ពាក្យសម្ងាត់ត្រូវតែ 6 តួ'); return; }
+
+  if (demoMode) {
+    const uid = 'u_' + Date.now();
+    const newUser = { uid, name, email, coins:0, purchases:[], topupHistory:[], notifications:[] };
+    demoUsers.push(newUser);
+    currentUser = { uid, email, displayName:name };
+    currentUserData = newUser;
+    renderAuthUI(currentUser);
+    updateWalletUI();
+    closeModal('auth-modal');
+    showToast('success','ចុះឈ្មោះដោយជោគជ័យ!');
+    return;
+  }
+
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, pass);
+    await cred.user.updateProfile({ displayName: name });
+    await db.collection('users').doc(cred.user.uid).set({
+      uid: cred.user.uid, name, email, coins:0,
+      purchases:[], topupHistory:[], notifications:[], createdAt: Date.now()
+    });
+    closeModal('auth-modal');
+    showToast('success','ចុះឈ្មោះដោយជោគជ័យ!');
+  } catch(e) {
+    showToast('error', e.message||'មានបញ្ហា');
+  }
+}
+
+function logout() {
+  if (demoMode) {
+    currentUser = null; currentUserData = null;
+    renderAuthUI(null);
+    showPage('home');
+    showToast('info','ចាកចេញដោយជោគជ័យ');
+    return;
+  }
+  auth.signOut();
+  showPage('home');
+  showToast('info','ចាកចេញដោយជោគជ័យ');
+}
+
+// ─── MOVIES ───
+async function loadMovies() {
+  if (demoMode) {
+    allMovies = [...demoMovies];
+    renderHomeMovies(allMovies);
+    renderAllMovies(allMovies);
+    return;
+  }
+  try {
+    const snap = await db.collection('movies').orderBy('createdAt','desc').get();
+    allMovies = snap.docs.map(d => ({id:d.id,...d.data()}));
+    renderHomeMovies(allMovies);
+    renderAllMovies(allMovies);
+  } catch(e) { console.error(e); }
+}
+
+function renderHomeMovies(movies) {
+  const featured = movies.slice(0, 6);
+  const latest = [...movies].sort((a,b) => b.createdAt - a.createdAt).slice(0, 6);
+  el('home-featured-grid').innerHTML = featured.map(movieCard).join('') || emptyState('ភ្លូង','គ្មានភាពយន្ត');
+  el('home-new-grid').innerHTML = latest.map(movieCard).join('') || emptyState('ភ្លូង','គ្មានភាពយន្ត');
+}
+
+function renderAllMovies(movies) {
+  el('all-movies-grid').innerHTML = movies.map(movieCard).join('') || emptyState('ភ្លូង','គ្មានភាពយន្ត');
+}
+
+function filterMovies(q) {
+  const filtered = q ? allMovies.filter(m => m.name.includes(q)) : allMovies;
+  renderAllMovies(filtered);
+}
+
+function movieCard(m) {
+  const stars = starsHTML(m.avgRating||0);
+  const epCount = (m.episodes||[]).length;
+  const owned = currentUserData && (currentUserData.purchases||[]).includes(m.id);
+  return `
+  <div class="movie-card" onclick="openMovieDetail('${m.id}')">
+    <div class="movie-thumb">
+      ${m.thumbUrl
+        ? `<img class="movie-thumb-img" src="${m.thumbUrl}" alt="${m.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : ''
+      }
+      <div class="movie-thumb-placeholder" ${m.thumbUrl ? 'style="display:none"':''}>🎬</div>
+      ${(m.freeEps||0) > 0 ? `<span class="movie-free-badge">FREE ${m.freeEps}EP</span>` : ''}
+      ${epCount > 0 ? `<span class="movie-ep-badge">${epCount} EP</span>` : ''}
+    </div>
+    <div class="movie-info">
+      <div class="movie-name">${m.name}</div>
+      <div class="movie-meta">
+        <div class="movie-stars">${stars}</div>
+        <div class="movie-price">${owned ? '✅' : (m.price||0)+'🪙'}</div>
+      </div>
+      ${m.note ? `<div class="movie-note">${m.note.slice(0,40)}${m.note.length>40?'...':''}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+function starsHTML(rating) {
+  let s = '';
+  for(let i=1;i<=5;i++) s += `<i class="fas fa-star" style="color:${i<=Math.round(rating)?'var(--gold)':'var(--text3)'}"></i>`;
+  return s;
+}
+
+// ─── MOVIE DETAIL ───
+function openMovieDetail(id) {
+  const m = allMovies.find(x => x.id===id);
+  if (!m) return;
+  currentMovieId = id;
+  currentEpIndex = null;
+
+  el('detail-title').textContent = m.name;
+  el('detail-note').textContent = m.note||'';
+  el('detail-price').textContent = (m.price||0) + ' 🪙';
+  el('detail-stars').innerHTML = starsHTML(m.avgRating||0);
+  el('detail-rating-count').textContent = `(${m.ratingCount||0})`;
+  el('avg-rating').textContent = (m.avgRating||0).toFixed(1);
+  el('avg-stars-display').innerHTML = starsHTML(m.avgRating||0);
+  el('total-ratings').textContent = (m.ratingCount||0) + ' ការវាយតម្លៃ';
+
+  if (m.thumbUrl) {
+    el('detail-bg').src = m.thumbUrl;
+    el('detail-poster').src = m.thumbUrl;
+  }
+
+  const owned = currentUserData && (currentUserData.purchases||[]).includes(id);
+  el('detail-buy-btn').style.display = owned ? 'none' : '';
+  el('detail-owned-badge').style.display = owned ? '' : 'none';
+  el('user-rating-section').style.display = currentUser && !owned ? 'none' : (currentUser ? '' : 'none');
+
+  const freeEps = m.freeEps || 2;
+  const eps = m.episodes || [];
+  el('ep-free-note').textContent = `(${freeEps} EP ឥតគិតថ្លៃ)`;
+
+  let epsHTML = '';
+  eps.forEach((ep,i) => {
+    const isFree = i < freeEps;
+    const isLocked = !isFree && !owned;
+    epsHTML += `
+    <div class="ep-btn ${isFree?'free':''} ${isLocked?'locked':''}" onclick="playEp(${i}, ${isLocked})">
+      <span class="ep-num">${i+1}</span>
+      <span class="ep-label">EP ${i+1}</span>
+      ${isFree ? `<span class="ep-free-tag">FREE</span>` : ''}
+      ${isLocked ? '<i class="fas fa-lock" style="font-size:10px;color:var(--text3);position:absolute;bottom:5px;right:5px"></i>' : ''}
+    </div>`;
+  });
+  el('episodes-grid').innerHTML = epsHTML || '<p style="color:var(--text2);font-size:13px">គ្មាន Episode</p>';
+
+  el('video-section').style.display = 'none';
+  el('video-placeholder-section').style.display = '';
+  el('video-ph-text').textContent = 'ជ្រើសរើស Episode';
+
+  pageHistory.push(currentPage());
+  showPage('movie-detail');
+}
+
+function playEp(idx, locked) {
+  if (locked) {
+    if (!currentUser) { openModal('auth-modal'); return; }
+    showToast('info','ទិញភាពយន្តដើម្បីមើល EP នេះ');
+    return;
+  }
+  const m = allMovies.find(x => x.id===currentMovieId);
+  if (!m) return;
+  const ep = (m.episodes||[])[idx];
+  if (!ep) return;
+  currentEpIndex = idx;
+
+  // Highlight active
+  document.querySelectorAll('.ep-btn').forEach((b,i) => {
+    b.classList.toggle('active', i===idx);
+  });
+
+  if (ep.videoUrl) {
+    el('video-source').src = ep.videoUrl;
+    el('main-video').load();
+    el('video-section').style.display = '';
+    el('video-placeholder-section').style.display = 'none';
+  } else {
+    el('video-ph-text').textContent = `EP ${idx+1} - URL មិនទាន់បន្ថែម`;
+    el('video-section').style.display = 'none';
+    el('video-placeholder-section').style.display = '';
+    showToast('info','EP នេះ Admin មិនទាន់ Upload');
+  }
+}
+
+function tryPlayEp() {
+  if (currentEpIndex === null) {
+    // Play first
+    const m = allMovies.find(x => x.id===currentMovieId);
+    if (m && (m.episodes||[]).length > 0) playEp(0, false);
+  }
+}
+
+function goBack() {
+  const prev = pageHistory.pop();
+  if (prev) showPage(prev, true);
+  else showPage('home', true);
+}
+
+// ─── BUY MOVIE ───
+function buyMovie() {
+  if (!currentUser) { openModal('auth-modal'); return; }
+  const m = allMovies.find(x => x.id===currentMovieId);
+  if (!m) return;
+  const coins = currentUserData?.coins || 0;
+  el('buy-movie-name-confirm').textContent = m.name;
+  el('buy-price-confirm').textContent = (m.price||0) + ' Coins';
+  el('buy-coins-after').textContent = (coins - (m.price||0)) + ' Coins';
+  openModal('buy-confirm-modal');
+}
+
+async function confirmBuyMovie() {
+  const m = allMovies.find(x => x.id===currentMovieId);
+  if (!m) return;
+  const coins = currentUserData?.coins || 0;
+  if (coins < (m.price||0)) {
+    closeModal('buy-confirm-modal');
+    showToast('error','Coins មិនគ្រប់! សូម Top Up');
+    setTimeout(() => openModal('topup-modal'), 500);
+    return;
+  }
+
+  if (demoMode) {
+    currentUserData.coins -= (m.price||0);
+    if (!currentUserData.purchases) currentUserData.purchases = [];
+    currentUserData.purchases.push(m.id);
+    updateWalletUI();
+    closeModal('buy-confirm-modal');
+    showToast('success','ទិញភាពយន្តដោយជោគជ័យ!');
+    openMovieDetail(currentMovieId);
+    return;
+  }
+
+  try {
+    const newCoins = coins - (m.price||0);
+    const purchases = [...(currentUserData.purchases||[]), m.id];
+    await db.collection('users').doc(currentUser.uid).update({ coins: newCoins, purchases });
+    await db.collection('purchases').add({
+      uid: currentUser.uid,
+      movieId: m.id,
+      movieName: m.name,
+      coins: m.price,
+      createdAt: Date.now()
+    });
+    currentUserData.coins = newCoins;
+    currentUserData.purchases = purchases;
+    updateWalletUI();
+    closeModal('buy-confirm-modal');
+    showToast('success','ទិញភាពយន្តដោយជោគជ័យ!');
+    openMovieDetail(currentMovieId);
+  } catch(e) { showToast('error','មានបញ្ហា: '+e.message); }
+}
+
+// ─── TOPUP ───
+function selectPlan(card, amount, coins) {
+  if (!currentUser) { closeModal('topup-modal'); openModal('auth-modal'); return; }
+  document.querySelectorAll('.topup-card').forEach(c => c.classList.remove('selected'));
+  card.classList.add('selected');
+  selectedPlanAmount = amount;
+  selectedPlanCoins = coins;
+  selectedPlanCard = card;
+  el('topup-warning-box').style.display = '';
+  el('topup-next-btn').style.display = '';
+}
+
+function goTopupStep2() {
+  if (!selectedPlanAmount) { showToast('error','ជ្រើសរើស package ជាមុន'); return; }
+  el('topup-step-1').style.display = 'none';
+  el('topup-step-2').style.display = '';
+  el('plan-amount-show').textContent = '$' + selectedPlanAmount;
+  el('plan-coins-show').textContent = selectedPlanCoins;
+
+  // Load QR
+  const qrUrl = demoMode ? demoSettings.qrUrl : '';
+  if (qrUrl) {
+    el('payment-qr-img').src = qrUrl;
+    el('payment-qr-img').style.display = '';
+    el('no-qr-msg').style.display = 'none';
+  } else {
+    el('payment-qr-img').style.display = 'none';
+    el('no-qr-msg').style.display = '';
+    if (!demoMode) loadQRFromDB();
+  }
+}
+
+async function loadQRFromDB() {
+  try {
+    const snap = await db.collection('settings').doc('payment').get();
+    if (snap.exists && snap.data().qrUrl) {
+      el('payment-qr-img').src = snap.data().qrUrl;
+      el('payment-qr-img').style.display = '';
+      el('no-qr-msg').style.display = 'none';
+    }
+  } catch(e){}
+}
+
+function backTopupStep1() {
+  el('topup-step-2').style.display = 'none';
+  el('topup-step-1').style.display = '';
+}
+
+function previewReceipt(input) {
+  if (!input.files[0]) return;
+  receiptFile = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    receiptDataUrl = e.target.result;
+    const area = el('receipt-upload-area');
+    area.classList.add('has-file');
+    area.innerHTML = `<img src="${receiptDataUrl}" style="max-height:100px;border-radius:8px"><p style="color:var(--green);margin-top:6px">✅ ផ្ទុករូបភាពបានសำเร็จ</p>`;
+  };
+  reader.readAsDataURL(receiptFile);
+}
+
+async function submitTopup() {
+  if (!receiptDataUrl) { showToast('error','សូមផ្ទុក Receipt ជាមុន'); return; }
+
+  const orderId = '#' + Math.random().toString(36).substring(2,10).toUpperCase();
+  const order = {
+    id: orderId,
+    uid: currentUser.uid,
+    userName: currentUserData.name||currentUser.email,
+    userEmail: currentUser.email,
+    amount: selectedPlanAmount,
+    coins: selectedPlanCoins,
+    receiptUrl: receiptDataUrl,
+    status: 'pending',
+    createdAt: Date.now()
+  };
+
+  if (demoMode) {
+    demoOrders.push(order);
+    if (!currentUserData.topupHistory) currentUserData.topupHistory = [];
+    currentUserData.topupHistory.push(order);
+    // Notify user
+    addNotification(currentUser.uid, {
+      title: 'TopUp ពិនិត្យ',
+      body: `ការ TopUp $${selectedPlanAmount} (${selectedPlanCoins} Coins) កំពុងរង់ចាំ Admin ពិនិត្យ`,
+      type: 'pending', createdAt: Date.now()
+    });
+    closeModal('topup-modal');
+    resetTopupModal();
+    showToast('success','ដាក់ស្នើដោយជោគជ័យ! រង់ចាំ Admin ពិនិត្យ');
+    return;
+  }
+
+  try {
+    // Upload receipt to Cloudinary
+    let receiptUrl = receiptDataUrl;
+    if (receiptFile) {
+      receiptUrl = await uploadToCloudinary(receiptFile);
+    }
+    order.receiptUrl = receiptUrl;
+    await db.collection('topupOrders').add(order);
+    await db.collection('users').doc(currentUser.uid).update({
+      topupHistory: firebase.firestore.FieldValue.arrayUnion(order)
+    });
+    // Notify admin
+    await db.collection('notifications').add({
+      targetUid: 'admin',
+      title: 'TopUp Request ថ្មី',
+      body: `${currentUserData.name} ស្នើ TopUp $${selectedPlanAmount}`,
+      orderId: order.id, type:'topup_request', read:false, createdAt: Date.now()
+    });
+    // Notify user
+    await db.collection('notifications').add({
+      targetUid: currentUser.uid,
+      title: 'TopUp Pending',
+      body: `ការ TopUp $${selectedPlanAmount} (${selectedPlanCoins} Coins) កំពុងរង់ចាំ Admin Approve`,
+      orderId: order.id, type:'pending', read:false, createdAt: Date.now()
+    });
+    if (currentUserData) {
+      currentUserData.notifications = currentUserData.notifications || [];
+      currentUserData.notifications.unshift({
+        title: 'TopUp Pending',
+        body: `ការ TopUp $${selectedPlanAmount} (${selectedPlanCoins} Coins) កំពុងរង់ចាំ Admin Approve`,
+        orderId: order.id, type:'pending', read:false, createdAt: Date.now()
+      });
+      loadNotifications();
+    }
+    closeModal('topup-modal');
+    resetTopupModal();
+    showToast('success','ដាក់ស្នើដោយជោគជ័យ!');
+  } catch(e) { showToast('error','មានបញ្ហា'); }
+}
+
+function resetTopupModal() {
+  el('topup-step-1').style.display = '';
+  el('topup-step-2').style.display = 'none';
+  el('topup-warning-box').style.display = 'none';
+  el('topup-next-btn').style.display = 'none';
+  el('receipt-upload-area').classList.remove('has-file');
+  el('receipt-upload-area').innerHTML = '<i class="fas fa-cloud-upload-alt"></i><p>ចុចដើម្បីផ្ទុករូបភាព Receipt</p>';
+  el('receipt-file').value = '';
+  receiptDataUrl = null; receiptFile = null;
+  document.querySelectorAll('.topup-card').forEach(c => c.classList.remove('selected'));
+  selectedPlanAmount = null; selectedPlanCoins = null;
+}
+
+// ─── RATING ───
+function setUserRating(e) {
+  const star = e.target.closest('[data-val]');
+  if (!star) return;
+  userRating = parseInt(star.dataset.val);
+  document.querySelectorAll('#user-star-rating i').forEach((s,i) => {
+    s.classList.toggle('active', i < userRating);
+    s.style.color = i < userRating ? 'var(--gold)' : 'var(--text3)';
+  });
+}
+
+async function submitRating() {
+  if (!userRating) { showToast('error','ជ្រើសរើសតារា'); return; }
+  const m = allMovies.find(x => x.id===currentMovieId);
+  if (!m) return;
+
+  const count = (m.ratingCount||0) + 1;
+  const avg = ((m.avgRating||0) * (m.ratingCount||0) + userRating) / count;
+  m.avgRating = Math.round(avg*10)/10;
+  m.ratingCount = count;
+
+  if (!demoMode) {
+    try {
+      await db.collection('movies').doc(currentMovieId).update({ avgRating: avg, ratingCount: count });
+    } catch(e){}
+  }
+
+  el('avg-rating').textContent = m.avgRating.toFixed(1);
+  el('avg-stars-display').innerHTML = starsHTML(m.avgRating);
+  el('total-ratings').textContent = count + ' ការវាយតម្លៃ';
+  el('user-rating-section').style.display = 'none';
+  showToast('success','ដាក់ពិន្ទុដោយជោគជ័យ!');
+}
+
+// ─── NOTIFICATIONS ───
+function addNotification(uid, notif) {
+  const payload = {
+    targetUid: uid,
+    title: notif.title || 'ការជូនដំណឹង',
+    body: notif.body || '',
+    type: notif.type || 'info',
+    orderId: notif.orderId || null,
+    read: notif.read || false,
+    createdAt: notif.createdAt || Date.now()
+  };
+  if (demoMode) {
+    const u = demoUsers.find(x => x.uid===uid);
+    if (u) { if(!u.notifications)u.notifications=[]; u.notifications.unshift(payload); }
+    if (currentUser && currentUser.uid===uid) {
+      currentUserData.notifications = currentUserData.notifications||[];
+      currentUserData.notifications.unshift(payload);
+      loadNotifications();
+      showToast('info', payload.title + ' - ' + payload.body, 5000);
+    }
+  } else {
+    db.collection('notifications').add(payload).catch(e => console.error('Notification add failed', e));
+    if (currentUser && currentUser.uid===uid) {
+      currentUserData.notifications = currentUserData.notifications||[];
+      currentUserData.notifications.unshift(payload);
+      loadNotifications();
+      showToast('info', payload.title + ' - ' + payload.body, 5000);
+    }
+  }
+}
+
+async function loadNotifications() {
+  if (!currentUserData) return;
+  if (!demoMode && currentUser) {
+    try {
+      const snap = await db.collection('notifications')
+        .where('targetUid','==',currentUser.uid)
+        .orderBy('createdAt','desc')
+        .limit(50)
+        .get();
+      currentUserData.notifications = snap.docs.map(d => ({ docId:d.id, ...d.data() }));
+    } catch(e) {
+      console.error('Failed to load notifications', e);
+    }
+  }
+  const notifs = currentUserData.notifications || [];
+  const unread = notifs.filter(n=>!n.read);
+  el('notif-badge').style.display = unread.length ? '' : 'none';
+  if (!notifs.length) {
+    el('notif-list').innerHTML = `<div class="empty-state" style="padding:24px"><i class="fas fa-bell-slash" style="font-size:28px;color:var(--text3);display:block;margin-bottom:8px"></i><p>គ្មានការជូនដំណឹង</p></div>`;
+    return;
+  }
+  el('notif-list').innerHTML = notifs.map((n,i) => `
+    <div class="notif-item ${!n.read?'unread':''}" onclick="markNotifRead(${i})">
+      <div class="notif-title">${n.title||'ការជូនដំណឹង'}</div>
+      <div class="notif-body">${n.body||''}</div>
+      <div class="notif-time">${timeAgo(n.createdAt)}</div>
+    </div>
+  `).join('');
+}
+
+async function markNotifRead(idx) {
+  if (!currentUserData?.notifications) return;
+  const notif = currentUserData.notifications[idx];
+  if (!notif) return;
+  currentUserData.notifications[idx].read = true;
+  if (!demoMode && notif.docId) {
+    try {
+      await db.collection('notifications').doc(notif.docId).update({ read:true });
+    } catch(e) { console.error('Failed to mark notification read', e); }
+  }
+  loadNotifications();
+}
+
+// ─── WALLET/HISTORY PAGES ───
+async function loadWalletPage() {
+  updateWalletUI();
+  if (!currentUser) { el('topup-history-list').innerHTML = requireLogin(); return; }
+  let history = currentUserData?.topupHistory || [];
+  if (!demoMode) {
+    try {
+      const snap = await db.collection('topupOrders')
+        .where('uid','==', currentUser.uid)
+        .orderBy('createdAt','desc')
+        .get();
+      history = snap.docs.map(d => d.data());
+    } catch(e) {
+      console.error('Failed to load topup history', e);
+      history = [];
+    }
+  }
+  if (!history.length) {
+    el('topup-history-list').innerHTML = `<div class="empty-state"><i class="fas fa-receipt"></i><h3>គ្មានប្រវត្តិ</h3></div>`;
+    return;
+  }
+  el('topup-history-list').innerHTML = `<div class="order-list">${history.map(o=>`
+    <div class="order-item">
+      <div class="order-item-icon"><i class="fas fa-coins"></i></div>
+      <div class="order-item-info">
+        <div class="order-item-title">TopUp $${o.amount}</div>
+        <div class="order-item-sub">${timeAgo(o.createdAt)}</div>
+      </div>
+      <div class="order-item-right">
+        <div class="order-item-amount">+${o.coins} Coins</div>
+        <span class="badge ${o.status||'pending'}">${o.status==='approved'?'Approved':o.status==='rejected'?'Rejected':'Pending'}</span>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function loadHistoryPage() {
+  if (!currentUser) { el('purchase-history-list').innerHTML = requireLogin(); return; }
+  const purchases = currentUserData?.purchases || [];
+  if (!purchases.length) {
+    el('purchase-history-list').innerHTML = `<div class="empty-state"><i class="fas fa-film"></i><h3>គ្មានប្រវត្តិ</h3><p>អ្នកមិនទាន់បានទិញភាពយន្ត</p></div>`;
+    return;
+  }
+  const bought = purchases.map(id => allMovies.find(m=>m.id===id)).filter(Boolean);
+  el('purchase-history-list').innerHTML = `<div class="order-list">${bought.map(m=>`
+    <div class="order-item" onclick="openMovieDetail('${m.id}'); setActiveNav('bn-movies')" style="cursor:pointer">
+      <div class="order-item-icon" style="width:48px;height:72px;border-radius:8px;overflow:hidden;background:var(--bg3)">
+        ${m.thumbUrl?`<img src="${m.thumbUrl}" style="width:100%;height:100%;object-fit:cover">`: '<i class="fas fa-film" style="font-size:20px;color:var(--text3);position:relative;top:50%;transform:translateY(-50%);display:block;text-align:center"></i>'}
+      </div>
+      <div class="order-item-info">
+        <div class="order-item-title">${m.name}</div>
+        <div class="order-item-sub">${(m.episodes||[]).length} EP</div>
+      </div>
+      <div class="order-item-right">
+        <span class="badge approved">ទិញហើយ</span>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─── ADMIN ───
+function showAdminUI() {
+  loadAdminData();
+}
+
+async function loadAdminData() {
+  loadAdminOrders();
+  loadAdminUsers();
+  loadAdminMovies();
+  loadAdminQR();
+  updateAdminStats();
+}
+
+async function loadAdminOrders() {
+  const list = el('admin-orders-list');
+  if (demoMode) {
+    const orders = [...demoOrders].sort((a,b)=>b.createdAt-a.createdAt);
+    renderAdminOrders(orders);
+    return;
+  }
+  try {
+    const snap = await db.collection('topupOrders').orderBy('createdAt','desc').limit(50).get();
+    renderAdminOrders(snap.docs.map(d=>({docId:d.id,...d.data()})));
+  } catch(e) { list.innerHTML = '<p style="color:var(--red)">Error loading orders</p>'; }
+}
+
+function renderAdminOrders(orders) {
+  const list = el('admin-orders-list');
+  el('stat-pending').textContent = orders.filter(o=>o.status==='pending').length;
+  el('stat-approved').textContent = orders.filter(o=>o.status==='approved').length;
+  if (!orders.length) { list.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><h3>គ្មាន Orders</h3></div>`; return; }
+  list.innerHTML = orders.map(o=>{
+    const orderKey = o.docId || o.id || o.uid+o.createdAt;
+    const orderLabel = o.id || o.docId || 'N/A';
+    return `
+    <div class="admin-order-card">
+      <div class="admin-order-header">
+        <span class="admin-order-id">${orderLabel}</span>
+        <span class="badge ${o.status||'pending'}">${o.status||'PENDING'}</span>
+      </div>
+      <div class="admin-order-body">
+        <div class="admin-order-row"><span>ឈ្មោះ</span><span>${o.userName||'N/A'}</span></div>
+        <div class="admin-order-row"><span>អ៊ីមែល</span><span>${o.userEmail||'N/A'}</span></div>
+        <div class="admin-order-row"><span>ចំនួន</span><span class="text-gold fw-700">$${o.amount} → ${o.coins} Coins</span></div>
+        <div class="admin-order-row"><span>ពេលវេលា</span><span>${timeAgo(o.createdAt)}</span></div>
+        ${o.status==='pending'?`
+        <div class="admin-order-actions">
+          <button class="btn-approve" onclick="approveOrder('${orderKey}','${o.uid}',${o.coins})">
+            <i class="fas fa-check"></i> Approve
+          </button>
+          <button class="btn-reject" onclick="rejectOrder('${orderKey}','${o.uid}')">
+            <i class="fas fa-times"></i> Reject
+          </button>
+          ${o.receiptUrl?`<button class="btn-view-proof" onclick="viewProof('${o.receiptUrl}')"><i class="fas fa-eye"></i></button>`:''}
+        </div>`:`
+        <div style="margin-top:8px;display:flex;gap:8px">
+          ${o.receiptUrl?`<button class="btn-view-proof" onclick="viewProof('${o.receiptUrl}')"><i class="fas fa-eye"></i> View Receipt</button>`:''}
+        </div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function approveOrder(orderId, uid, coins) {
+  if (demoMode) {
+    const o = demoOrders.find(x => x.id===orderId);
+    if (o) o.status = 'approved';
+    const u = demoUsers.find(x => x.uid===uid);
+    if (u) {
+      u.coins = (u.coins||0) + parseInt(coins);
+      if (!u.topupHistory) u.topupHistory=[];
+      const th = u.topupHistory.find(x=>x.id===orderId);
+      if (th) th.status='approved';
+    }
+    if (currentUserData && currentUserData.uid===uid) {
+      currentUserData.coins = (currentUserData.coins||0) + parseInt(coins);
+      const th = (currentUserData.topupHistory||[]).find(x=>x.id===orderId);
+      if (th) th.status='approved';
+      updateWalletUI();
+      loadWalletPage();
+    }
+    addNotification(uid, {
+      title:'✅ TopUp Approved!',
+      body:`ការ TopUp របស់អ្នកត្រូវបាន Approve! ចំនួន ${coins} Coins ត្រូវបានបន្ថែម`,
+      type:'approved', read:false, createdAt:Date.now()
+    });
+    showToast('success',`Approved! +${coins} Coins`);
+    loadAdminOrders();
+    return;
+  }
+  try {
+    await db.collection('topupOrders').doc(orderId).update({ status:'approved' });
+    await db.collection('users').doc(uid).update({
+      coins: firebase.firestore.FieldValue.increment(parseInt(coins))
+    });
+    const userRef = db.collection('users').doc(uid);
+    const userSnap = await userRef.get();
+    if (userSnap.exists) {
+      const userData = userSnap.data();
+      const history = userData.topupHistory || [];
+      const updatedHistory = history.map(x => x.id===orderId ? { ...x, status:'approved' } : x);
+      if (JSON.stringify(updatedHistory) !== JSON.stringify(history)) {
+        await userRef.update({ topupHistory: updatedHistory });
+        if (currentUserData && currentUserData.uid===uid) {
+          currentUserData.topupHistory = updatedHistory;
+          currentUserData.coins = (currentUserData.coins||0) + parseInt(coins);
+          updateWalletUI();
+          loadWalletPage();
+        }
+      }
+    }
+    await db.collection('notifications').add({
+      targetUid: uid, title:'✅ TopUp Approved!',
+      body:`ចំនួន ${coins} Coins ត្រូវបានបន្ថែម`,
+      type:'approved', read:false, createdAt:Date.now()
+    });
+    showToast('success','Approved!');
+    loadAdminOrders();
+  } catch(e) { showToast('error',e.message); }
+}
+
+async function rejectOrder(orderId, uid) {
+  if (demoMode) {
+    const o = demoOrders.find(x=>x.id===orderId);
+    if (o) o.status='rejected';
+    const u = demoUsers.find(x => x.uid===uid);
+    if (u && u.topupHistory) {
+      const th = u.topupHistory.find(x=>x.id===orderId);
+      if (th) th.status='rejected';
+    }
+    if (currentUserData && currentUserData.uid===uid) {
+      const th = (currentUserData.topupHistory||[]).find(x=>x.id===orderId);
+      if (th) th.status='rejected';
+      loadWalletPage();
+    }
+    addNotification(uid, {
+      title:'❌ TopUp Rejected',
+      body:'ការ TopUp របស់អ្នកត្រូវបានបដិសេធ សូមទំនាក់ទំនង Admin',
+      type:'rejected', read:false, createdAt:Date.now()
+    });
+    showToast('info','Rejected');
+    loadAdminOrders();
+    return;
+  }
+  try {
+    await db.collection('topupOrders').doc(orderId).update({ status:'rejected' });
+    const userRef = db.collection('users').doc(uid);
+    const userSnap = await userRef.get();
+    if (userSnap.exists) {
+      const userData = userSnap.data();
+      const history = userData.topupHistory || [];
+      const updatedHistory = history.map(x => x.id===orderId ? { ...x, status:'rejected' } : x);
+      if (JSON.stringify(updatedHistory) !== JSON.stringify(history)) {
+        await userRef.update({ topupHistory: updatedHistory });
+        if (currentUserData && currentUserData.uid===uid) {
+          currentUserData.topupHistory = updatedHistory;
+          loadWalletPage();
+        }
+      }
+    }
+    await db.collection('notifications').add({
+      targetUid: uid, title:'❌ TopUp Rejected',
+      body:'ការ TopUp ត្រូវបានបដិសេធ', type:'rejected', read:false, createdAt:Date.now()
+    });
+    showToast('info','Rejected');
+    loadAdminOrders();
+  } catch(e){}
+}
+
+async function loadAdminUsers() {
+  if (demoMode) {
+    renderAdminUsers(demoUsers);
+    el('stat-users').textContent = demoUsers.length;
+    return;
+  }
+  try {
+    const snap = await db.collection('users').orderBy('createdAt','desc').limit(100).get();
+    const users = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderAdminUsers(users);
+    el('stat-users').textContent = users.length;
+  } catch(e){}
+}
+
+function renderAdminUsers(users) {
+  const list = el('admin-users-list');
+  if (!users.length) { list.innerHTML=`<div class="empty-state"><i class="fas fa-users"></i><h3>គ្មាន Users</h3></div>`; return; }
+  list.innerHTML = users.map(u=>`
+    <div class="user-list-item">
+      <div class="user-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0">${(u.name||u.email||'?')[0].toUpperCase()}</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${u.name||'N/A'}</div>
+        <div style="font-size:11px;color:var(--text2)">${u.email||''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="text-gold fw-700" style="font-family:var(--font-en)">${u.coins||0} 🪙</div>
+        <div style="font-size:10px;color:var(--text2)">${(u.purchases||[]).length} movies</div>
+      </div>
+    </div>`).join('');
+}
+
+async function loadAdminMovies() {
+  el('stat-movies').textContent = demoMode ? demoMovies.length : '';
+  if (demoMode) { renderAdminMovies(demoMovies); return; }
+  try {
+    const snap = await db.collection('movies').get();
+    const movies = snap.docs.map(d=>({id:d.id,...d.data()}));
+    el('stat-movies').textContent = movies.length;
+    renderAdminMovies(movies);
+  } catch(e){}
+}
+
+function renderAdminMovies(movies) {
+  const list = el('admin-movies-list');
+  if (!movies.length) { list.innerHTML=`<div class="empty-state"><i class="fas fa-film"></i><h3>គ្មានភាពយន្ត</h3></div>`; return; }
+  list.innerHTML = movies.map(m=>`
+    <div class="admin-movie-card">
+      <div class="admin-movie-header">
+        ${m.thumbUrl?`<img class="admin-movie-thumb" src="${m.thumbUrl}" alt="">`:`<div class="admin-movie-thumb" style="display:flex;align-items:center;justify-content:center;font-size:20px">🎬</div>`}
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px">${m.name}</div>
+          <div style="font-size:12px;color:var(--text2)">${(m.episodes||[]).length} EP · ${m.price||0} Coins · ★${m.avgRating||0}</div>
+        </div>
+      </div>
+      <div class="admin-movie-actions">
+        <button class="btn-sm btn-sm-gold" onclick="editMovie('${m.id}')"><i class="fas fa-edit"></i> Edit</button>
+        <button class="btn-sm btn-sm-blue" onclick="openManageEps('${m.id}')"><i class="fas fa-list"></i> EP</button>
+        <button class="btn-sm btn-sm-red" onclick="deleteMovie('${m.id}')"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function updateAdminStats() {}
+
+async function saveMovie() {
+  const id = el('movie-edit-id').value;
+  const name = el('movie-name-input').value.trim();
+  const note = el('movie-note-input').value.trim();
+  const price = parseInt(el('movie-price-input').value)||0;
+  const freeEps = parseInt(el('movie-free-ep-input').value)||2;
+  const thumbUrl = el('movie-thumb-url').value.trim();
+  if (!name) { showToast('error','ប្រាស់ឈ្មោះ'); return; }
+
+  const data = { name, note, price, freeEps, thumbUrl, updatedAt: Date.now() };
+
+  if (demoMode) {
+    if (id) {
+      const idx = demoMovies.findIndex(m=>m.id===id);
+      if (idx>=0) demoMovies[idx] = {...demoMovies[idx],...data};
+    } else {
+      demoMovies.unshift({...data, id:'m_'+Date.now(), episodes:[], avgRating:0, ratingCount:0, createdAt:Date.now()});
+    }
+    allMovies = [...demoMovies];
+    renderAdminMovies(demoMovies);
+    renderHomeMovies(allMovies);
+    renderAllMovies(allMovies);
+    closeModal('add-movie-modal');
+    showToast('success', id?'Movie Updated!':'Movie Added!');
+    return;
+  }
+
+  try {
+    if (id) {
+      await db.collection('movies').doc(id).update(data);
+    } else {
+      await db.collection('movies').add({...data, episodes:[], avgRating:0, ratingCount:0, createdAt:Date.now()});
+    }
+    closeModal('add-movie-modal');
+    showToast('success', id?'Updated!':'Added!');
+    loadAdminMovies(); loadMovies();
+  } catch(e) { showToast('error',e.message); }
+}
+
+function editMovie(id) {
+  const m = allMovies.find(x=>x.id===id) || demoMovies.find(x=>x.id===id);
+  if (!m) return;
+  el('movie-edit-id').value = m.id;
+  el('movie-modal-title').textContent = '✏️ Edit Movie';
+  el('movie-name-input').value = m.name||'';
+  el('movie-note-input').value = m.note||'';
+  el('movie-price-input').value = m.price||'';
+  el('movie-free-ep-input').value = m.freeEps||2;
+  el('movie-thumb-url').value = m.thumbUrl||'';
+  openModal('add-movie-modal');
+}
+
+function openAddMovieModal() {
+  el('movie-edit-id').value='';
+  el('movie-modal-title').textContent='➕ Add Movie';
+  el('movie-name-input').value='';
+  el('movie-note-input').value='';
+  el('movie-price-input').value='';
+  el('movie-free-ep-input').value='2';
+  el('movie-thumb-url').value='';
+  openModal('add-movie-modal');
+}
+
+async function deleteMovie(id) {
+  if (!confirm('Delete this movie?')) return;
+  if (demoMode) {
+    const idx = demoMovies.findIndex(m=>m.id===id);
+    if (idx>=0) demoMovies.splice(idx,1);
+    allMovies = [...demoMovies];
+    loadAdminMovies(); renderHomeMovies(allMovies); renderAllMovies(allMovies);
+    showToast('success','Deleted');
+    return;
+  }
+  try {
+    await db.collection('movies').doc(id).delete();
+    loadAdminMovies(); loadMovies();
+    showToast('success','Deleted');
+  } catch(e){}
+}
+
+function openManageEps(movieId) {
+  managingMovieId = movieId;
+  const m = (demoMode?demoMovies:allMovies).find(x=>x.id===movieId);
+  if (!m) return;
+  const eps = m.episodes||[];
+  el('ep-manage-list').innerHTML = eps.length ? eps.map((ep,i)=>`
+    <div class="ep-admin-item">
+      <div class="ep-admin-num">${i+1}</div>
+      <div style="flex:1">
+        <div class="ep-admin-title">${ep.title||'EP '+(i+1)}</div>
+        <div class="ep-admin-video">${ep.videoUrl?'✅ Video':'⚠️ No video'}</div>
+      </div>
+      <button class="btn-sm btn-sm-gold" onclick="editEp('${movieId}',${i})"><i class="fas fa-edit"></i></button>
+      <button class="btn-sm btn-sm-red" onclick="deleteEp('${movieId}',${i})"><i class="fas fa-trash"></i></button>
+    </div>`).join('') : '<p style="color:var(--text2);font-size:13px;margin-bottom:12px">គ្មាន Episodes</p>';
+  el('ep-movie-id').value = movieId;
+  openModal('manage-eps-modal');
+}
+
+function addEpForMovie() {
+  el('ep-movie-id').value = managingMovieId;
+  el('ep-edit-index').value = -1;
+  el('ep-modal-title').textContent = '🎞️ Add Episode';
+  el('ep-title-input').value='';
+  el('ep-video-url').value='';
+  closeModal('manage-eps-modal');
+  openModal('add-ep-modal');
+}
+
+function editEp(movieId, idx) {
+  const m = (demoMode?demoMovies:allMovies).find(x=>x.id===movieId);
+  if (!m) return;
+  const ep = (m.episodes||[])[idx];
+  el('ep-movie-id').value = movieId;
+  el('ep-edit-index').value = idx;
+  el('ep-modal-title').textContent = '✏️ Edit Episode';
+  el('ep-title-input').value = ep.title||'';
+  el('ep-video-url').value = ep.videoUrl||'';
+  closeModal('manage-eps-modal');
+  openModal('add-ep-modal');
+}
+
+async function saveEpisode() {
+  const movieId = el('ep-movie-id').value;
+  const idx = parseInt(el('ep-edit-index').value);
+  const title = el('ep-title-input').value.trim();
+  const videoUrl = el('ep-video-url').value.trim();
+  if (!title) { showToast('error','ប្រាស់ចំណងជើង'); return; }
+  const ep = { title, videoUrl };
+
+  if (demoMode) {
+    const m = demoMovies.find(x=>x.id===movieId);
+    if (!m) return;
+    if (!m.episodes) m.episodes=[];
+    if (idx>=0) m.episodes[idx]=ep;
+    else m.episodes.push(ep);
+    allMovies = [...demoMovies];
+    closeModal('add-ep-modal');
+    showToast('success', idx>=0?'Episode Updated!':'Episode Added!');
+    openManageEps(movieId);
+    return;
+  }
+  try {
+    const snap = await db.collection('movies').doc(movieId).get();
+    const eps = snap.data().episodes||[];
+    if (idx>=0) eps[idx]=ep; else eps.push(ep);
+    await db.collection('movies').doc(movieId).update({ episodes:eps });
+    closeModal('add-ep-modal');
+    showToast('success','Saved!');
+    loadMovies();
+    openManageEps(movieId);
+  } catch(e) { showToast('error',e.message); }
+}
+
+async function deleteEp(movieId, idx) {
+  if (!confirm('Delete EP?')) return;
+  if (demoMode) {
+    const m = demoMovies.find(x=>x.id===movieId);
+    if (m) m.episodes.splice(idx,1);
+    allMovies=[...demoMovies];
+    showToast('success','Deleted');
+    openManageEps(movieId);
+    return;
+  }
+  try {
+    const snap = await db.collection('movies').doc(movieId).get();
+    const eps = snap.data().episodes||[];
+    eps.splice(idx,1);
+    await db.collection('movies').doc(movieId).update({episodes:eps});
+    loadMovies();
+    openManageEps(movieId);
+    showToast('success','Deleted');
+  } catch(e){}
+}
+
+async function uploadQR(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const url = e.target.result;
+    el('admin-qr-preview').src = url;
+    el('admin-qr-preview').style.display='';
+    el('admin-qr-placeholder').style.display='none';
+    if (demoMode) { demoSettings.qrUrl=url; showToast('success','QR Updated!'); return; }
+    try {
+      const uploaded = await uploadToCloudinary(file);
+      await db.collection('settings').doc('payment').set({ qrUrl: uploaded });
+      showToast('success','QR Updated!');
+    } catch(ex) { showToast('error','Upload failed'); }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function loadAdminQR() {
+  if (demoMode) {
+    if (demoSettings.qrUrl) {
+      el('admin-qr-preview').src = demoSettings.qrUrl;
+      el('admin-qr-preview').style.display='';
+      el('admin-qr-placeholder').style.display='none';
+    }
+    return;
+  }
+  try {
+    const snap = await db.collection('settings').doc('payment').get();
+    if (snap.exists && snap.data().qrUrl) {
+      el('admin-qr-preview').src=snap.data().qrUrl;
+      el('admin-qr-preview').style.display='';
+      el('admin-qr-placeholder').style.display='none';
+    }
+  } catch(e){}
+}
+
+async function uploadMovieThumb(input) {
+  if (!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => { el('movie-thumb-url').value = e.target.result; showToast('success','Thumbnail ready'); };
+  reader.readAsDataURL(input.files[0]);
+}
+
+async function uploadEpisodeVideo(input) {
+  if (!input.files[0]) return;
+  try {
+    showToast('info','Uploading video...');
+    const uploadedUrl = await uploadToCloudinary(input.files[0]);
+    el('ep-video-url').value = uploadedUrl;
+    showToast('success','Video uploaded!');
+    input.value = ''; // Reset file input
+  } catch(e) {
+    showToast('error','Upload failed: ' + e.message);
+  }
+}
+
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+  const data = await res.json();
+  return data.secure_url;
+}
+
+function viewProof(url) {
+  el('proof-img-el').src = url;
+  openModal('proof-modal');
+}
+
+// ─── ADMIN TABS ───
+function switchAdminTab(tab, btn) {
+  ['orders','users','movies','settings'].forEach(t => {
+    el(`admin-tab-${t}`).style.display = t===tab ? '' : 'none';
+  });
+  document.querySelectorAll('#admin-page .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (tab==='orders') loadAdminOrders();
+  if (tab==='users') loadAdminUsers();
+  if (tab==='movies') loadAdminMovies();
+  if (tab==='settings') loadAdminQR();
+}
+
+// ─── NAVIGATION ───
+let _currentPage = 'home';
+function currentPage() { return _currentPage; }
+
+function showPage(page, noHistory=false) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const el_page = el(page+'-page');
+  if (el_page) {
+    el_page.classList.add('active');
+    _currentPage = page;
+  }
+
+  // Update desktop nav
+  document.querySelectorAll('.desktop-nav a').forEach(a => a.classList.remove('active'));
+  if (page==='home') el('nav-home')?.classList.add('active');
+  if (page==='movies') el('nav-movies')?.classList.add('active');
+
+  // Page-specific loads
+  if (page==='wallet') loadWalletPage();
+  if (page==='history') loadHistoryPage();
+  if (page==='admin') { if(currentUser?.email===ADMIN_EMAIL||demoMode&&currentUser?.email===ADMIN_EMAIL) loadAdminData(); }
+  if (page==='movies') renderAllMovies(allMovies);
+
+  window.scrollTo(0,0);
+}
+
+function handleProfileNav() {
+  if (currentUser) { showPage('profile'); setActiveNav('bn-profile'); }
+  else openModal('auth-modal');
+}
+
+function setActiveNav(id) {
+  document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+  el(id)?.classList.add('active');
+}
+
+function switchAuthTab(tab, btn) {
+  el('auth-login-form').style.display = tab==='login'?'':'none';
+  el('auth-register-form').style.display = tab==='register'?'':'none';
+  document.querySelectorAll('#auth-modal .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─── MODALS ───
+function openModal(id) {
+  el(id).classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(id) {
+  el(id).classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target===overlay) closeModal(overlay.id);
+  });
+});
+
+// ─── DROPDOWNS ───
+let openDropdown = null;
+function toggleDropdown(id) {
+  const dd = el(id);
+  const isOpen = dd.style.display !== 'none';
+  closeDropdowns();
+  if (!isOpen) { dd.style.display=''; openDropdown=id; }
+}
+function closeDropdowns() {
+  ['notif-dd','user-dd'].forEach(id => {
+    if (el(id)) el(id).style.display='none';
+  });
+  openDropdown=null;
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#notif-wrap') && !e.target.closest('#user-menu-wrap')) closeDropdowns();
+});
+
+// ─── MOBILE MENU ───
+function toggleMobileMenu() {
+  const menu = el('mobile-menu');
+  const backdrop = el('mobile-menu-backdrop');
+  const isOpen = menu.classList.contains('open');
+  
+  if (isOpen) {
+    closeMobileMenu();
+  } else {
+    menu.classList.add('open');
+    backdrop.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeMobileMenu() {
+  const menu = el('mobile-menu');
+  const backdrop = el('mobile-menu-backdrop');
+  menu.classList.remove('open');
+  backdrop.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function updateMobileMenuAuth(loggedIn) {
+  const loginItem = el('mobile-login-item');
+  const logoutItem = el('mobile-logout-item');
+  const profileItem = el('mobile-profile-item');
+  const walletItem = el('mobile-wallet-item');
+  const topupItem = el('mobile-topup-item');
+  const divider = el('mobile-menu-divider-2');
+  
+  if (loggedIn) {
+    loginItem.style.display = 'none';
+    logoutItem.style.display = '';
+    profileItem.style.display = '';
+    walletItem.style.display = '';
+    topupItem.style.display = '';
+    divider.style.display = '';
+  } else {
+    loginItem.style.display = '';
+    logoutItem.style.display = 'none';
+    profileItem.style.display = 'none';
+    walletItem.style.display = 'none';
+    topupItem.style.display = 'none';
+    divider.style.display = 'none';
+  }
+}
+
+function updateMobileMenuCoins(coins) {
+  el('mobile-coins').textContent = coins;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeMobileMenu();
+});
+
+// ─── TOAST ───
+function showToast(type, msg, duration=3000) {
+  const icons = { success:'fa-check-circle', error:'fa-times-circle', info:'fa-info-circle' };
+  const div = document.createElement('div');
+  div.className = `toast ${type}`;
+  div.innerHTML = `<i class="fas ${icons[type]||'fa-info-circle'}"></i><span>${msg}</span>`;
+  el('toast-container').appendChild(div);
+  setTimeout(() => { div.style.opacity='0'; div.style.transform='translateX(20px)'; div.style.transition='all .3s'; setTimeout(()=>div.remove(),300); }, duration);
+}
+
+// ─── UTILS ───
+function el(id) { return document.getElementById(id); }
+function timeAgo(ts) {
+  if (!ts) return '';
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s<60) return 'ឥឡូវ';
+  if (s<3600) return Math.floor(s/60)+'m';
+  if (s<86400) return Math.floor(s/3600)+'h';
+  return Math.floor(s/86400)+'d';
+}
+function requireLogin() {
+  return `<div class="empty-state"><i class="fas fa-lock"></i><h3>ត្រូវចូលគណនី</h3><p>ចូលគណនីដើម្បីមើលព័ត៌មាននេះ</p><button class="btn-primary" style="max-width:180px;margin-top:16px" onclick="openModal('auth-modal')">ចូល</button></div>`;
+}
+function emptyState(icon, text) {
+  return `<div class="empty-state" style="grid-column:1/-1"><i class="fas fa-${icon}"></i><p>${text}</p></div>`;
+}
+
+// ─── INIT ───
+document.addEventListener('DOMContentLoaded', () => {
+  initFirebase();
+  loadMovies();
+});
+</script>
+</body>
+</html>
